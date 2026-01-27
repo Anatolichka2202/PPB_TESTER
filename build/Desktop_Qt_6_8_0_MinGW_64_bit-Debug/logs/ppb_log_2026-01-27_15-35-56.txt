@@ -1,0 +1,48 @@
+=== Начало лога: 2026-01-27_15-35-56 ===
+[15:35:56.846] [INFO] Логирование инициализировано
+[15:35:56.847] [INFO] [MAIN] Запуск приложения...
+[15:35:56.847] [INFO] [APPLICATION] Начало инициализации приложения...
+[15:35:56.847] [INFO] [APPLICATION] Инициализация UDPClient...
+[15:35:56.847] [INFO] [APPLICATION] Запуск потока UDPClient...
+[15:35:56.919] [INFO] UDPClient привязан к порту 101
+[15:35:56.919] [INFO] UDPClient инициализирован в потоке: 17352
+[15:35:56.921] [INFO] [APPLICATION] UDPClient сообщил об успешной инициализации
+[15:35:56.922] [INFO] [APPLICATION] UDPClient успешно инициализирован
+[15:35:57.032] [INFO] [APPLICATION] Инициализация PPBCommunication...
+[15:35:57.032] [INFO] PPBCommunication конструктор вызван
+[15:35:57.033] [INFO] [APPLICATION] Запуск потока PPBCommunication...
+[15:35:57.140] [INFO] PPBCommunication::initialize начат в потоке: 11012
+[15:35:57.141] [INFO] PPBCommunication::initialize: создание таймеров...
+[15:35:57.142] [INFO] Таймеры созданы
+[15:35:57.142] [INFO] Подключение сигналов таймеров...
+[15:35:57.142] [INFO] Сигналы таймеров подключены
+[15:35:57.142] [INFO] Установка UDPClient...
+[15:35:57.142] [INFO] UDPClient установлен для PPBCommunication (порт: 101)
+[15:35:57.142] [INFO] PPBCommunication::initialize: инициализация завершена успешно
+[15:35:57.142] [INFO] [APPLICATION] PPBCommunication успешно инициализирован
+[15:35:57.248] [INFO] [APPLICATION] Инициализация PPBController...
+[15:35:57.248] [INFO] PPBController: все сигналы подключены
+[15:35:57.249] [INFO] [APPLICATION] PPBController успешно инициализирован
+[15:35:57.249] [INFO] [APPLICATION] Создание главного окна...
+[15:35:57.260] [INFO] [APPLICATION] Главное окно создано
+[15:35:57.260] [INFO] [APPLICATION] Инициализация приложения завершена успешно
+[15:35:57.321] [INFO] [MAIN] Приложение запущено
+[15:35:57.325] [INFO] Программа управления ППБ запущена
+[15:36:07.480] [INFO] PPBController::connectToPPB: address=0x0001, ip=0.0.0.0, port=8888
+[15:36:07.480] [INFO] PPBCommunication::connectToPPB: address=0x0001, ip=0.0.0.0, port=8888, thread=11012
+[15:36:07.480] [INFO] Параметры установлены: IP=0.0.0.0, Port=8888
+[15:36:07.480] [INFO] PPBCommunication::executeCommand: cmd=0, address=0x0001, thread=11012
+[15:36:07.480] [INFO] Запрос на выполнение команды: 0
+[15:36:07.480] [INFO] Команда создана: Опрос состояния
+[15:36:07.481] [INFO] PPBCommunication::sendPacket: Опрос состояния, размер: 8 байт
+[15:36:07.481] [INFO] Отправка unicast на 0.0.0.0:8888
+[15:36:07.481] [INFO] Запланирована отправка пакета: Опрос состояния
+[15:36:07.481] [DEBUG] Отправлен пакет (unicast): Опрос состояния на 0.0.0.0:8888
+[15:36:07.481] [DEBUG] Состояние изменено: 2
+[15:36:07.481] [INFO] Команда отправлена, ожидание ответа...
+[15:36:07.481] [ERROR] [APPLICATION] Ошибка UDPClient: Socket error: 7 - Unable to send a message
+[15:36:07.481] [ERROR] Необработанное исключение Windows: Нарушение доступа к памяти (Access Violation)
+[15:36:07.481] [ERROR] Адрес исключения: 0x7ffed6178bc2
+[15:36:07.481] [INFO] PPBCommunication занят выполнением команды
+[15:36:10.482] [WARNING] Таймаут операции
+[15:36:10.483] [DEBUG] Состояние изменено: 0
