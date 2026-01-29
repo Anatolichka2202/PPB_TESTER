@@ -3,7 +3,7 @@
 #include <QString>
 #include <QMap>
 
-#include "../core/ppbprotocol.h"
+#include "../core/communication/ppbprotocol.h"
 class TestSequenceComparator {
 public:
     struct Result {

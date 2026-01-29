@@ -440,9 +440,6 @@ void PPBController::setCommunication(PPBCommunication* communication)
 
 
 
-        connect(m_communicationThread, &QThread::started,
-                m_communication, &PPBCommunication::initializeInThread);
-        m_communicationThread->start();
 
         LOG_INFO("PPBCommunication перемещен в отдельный поток");
     }

@@ -1,9 +1,9 @@
 #include "applicationmanager.h"
-#include "udpclient.h"
-#include "ppbcommunication.h"
+#include "communication/udpclient.h"
+#include "communication/ppbcommunication.h"
 #include "../gui/ppbcontroller.h"
 #include "../gui/testerwindow.h"
-#include "logger.h"
+#include "../core/logger.h"
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QTimer>
@@ -23,12 +23,7 @@ ApplicationManager& ApplicationManager::instance()
 ApplicationManager::ApplicationManager(QObject* parent)
     : QObject(parent)
     , m_initialized(false)
-    , m_udpClient(nullptr)   //юдп объект
-    , m_udpThread(nullptr)  //юдп поток
-    , m_communication(nullptr)  //объект комуникации
-    , m_communicationThread(nullptr)   //поток коммуникации
-    , m_controller(nullptr)     //объект контроллера
-    , m_mainWindow(nullptr)     //объект окна
+    , m_communicationThread(nullptr)
 {
 }
 
@@ -43,23 +38,23 @@ bool ApplicationManager::initialize()
         return true;
     }
 
+    LOG_INFO("[APPLICATION] Начало инициализации приложения...");
+
     try {
-        LOG_INFO("[APPLICATION] Начало инициализации приложения...");
+        // Создаем коммуникационный поток
+        m_communicationThread = new QThread();
+        m_communicationThread->setObjectName("CommunicationThread");
 
-        // 1. Инициализируем UDPClient (должен быть первым)
+        // 1. Инициализируем UDPClient в коммуникационном потоке
         initializeUDPClient();
-        // Даем потоку UDPClient время на запуск
-        QThread::msleep(100);
 
-        // 2. Инициализируем PPBCommunication
+        // 2. Инициализируем PPBCommunication в том же потоке
         initializePPBCommunication();
-        // Даем потоку PPBCommunication время на запуск
-        QThread::msleep(100);
 
-        // 3. Инициализируем контроллер
+        // 3. Инициализируем контроллер (в основном потоке)
         initializeController();
 
-        // 4. Инициализируем главное окно
+        // 4. Инициализируем главное окно (в основном потоке)
         initializeMainWindow();
 
         m_initialized = true;
@@ -69,8 +64,19 @@ bool ApplicationManager::initialize()
         return true;
 
     } catch (const std::exception& e) {
-        LOG_ERROR("[APPLICATION] " + QString("Ошибка инициализации: %1").arg(e.what()));
+        LOG_ERROR("[APPLICATION] Ошибка инициализации: " + QString(e.what()));
+
+        // В случае ошибки очищаем ресурсы
+        cleanup();
+
         emit initializationFailed(e.what());
+        return false;
+    } catch (...) {
+        LOG_ERROR("[APPLICATION] Неизвестная ошибка инициализации");
+
+        cleanup();
+
+        emit initializationFailed("Неизвестная ошибка");
         return false;
     }
 }
@@ -79,119 +85,13 @@ void ApplicationManager::initializeUDPClient()
 {
     LOG_INFO("[APPLICATION] Инициализация UDPClient...");
 
-    // 1. Создаем UDPClient (НЕ синглтон!)
-    m_udpClient = new UDPClient();
+    // 1. Создаем UDPClient
+    m_udpClient = std::make_unique<UDPClient>();
 
-    // 2. Создаем поток для UDPClient
-    m_udpThread = new QThread();
-    m_udpThread->setObjectName("UDPThread");
+    // 2. Перемещаем в коммуникационный поток
+    m_udpClient->moveToThread(m_communicationThread);
 
-    // 3. Перемещаем UDPClient в его поток
-    m_udpClient->moveToThread(m_udpThread);
-
-    // 4. Подключаем сигналы до запуска потока
-    QEventLoop initLoop;
-    bool initSuccess = false;
-
-    // Сигнал об успешной инициализации
-    QMetaObject::Connection conn = QObject::connect(
-        m_udpClient, &UDPClient::initialized,
-        [&]() {
-            LOG_INFO("[APPLICATION] UDPClient сообщил об успешной инициализации");
-            initSuccess = true;
-            QMetaObject::invokeMethod(&initLoop, "quit", Qt::QueuedConnection);
-        }
-        );
-
-    // Сигнал об ошибке
-    QObject::connect(
-        m_udpClient, &UDPClient::errorOccurred,
-        [&](const QString& error) {
-            LOG_ERROR(QString("[APPLICATION] Ошибка UDPClient: %1").arg(error));
-            if (!initSuccess) {
-                QMetaObject::invokeMethod(&initLoop, "quit", Qt::QueuedConnection);
-            }
-        }
-        );
-
-    // Таймаут
-    QTimer timeoutTimer;
-    timeoutTimer.setSingleShot(true);
-    QObject::connect(&timeoutTimer, &QTimer::timeout, &initLoop, [&]() {
-        if (!initSuccess) {
-            LOG_ERROR("[APPLICATION] Таймаут инициализации UDPClient");
-            initLoop.quit();
-        }
-    });
-
-    // 5. Запускаем поток
-    LOG_INFO("[APPLICATION] Запуск потока UDPClient...");
-    m_udpThread->start();
-
-    // Небольшая пауза для запуска потока
-    QThread::msleep(50);
-
-    // 6. Инициализируем UDPClient в его потоке
-    QMetaObject::invokeMethod(m_udpClient, "initializeInThread", Qt::QueuedConnection);
-
-    // 7. Запускаем таймаут и ждем
-    timeoutTimer.start(3000); // 3 секунды таймаут
-    initLoop.exec();
-
-    // 8. Отключаем временное соединение
-    QObject::disconnect(conn);
-
-    if (!initSuccess) {
-        // Останавливаем поток в случае ошибки
-        m_udpThread->quit();
-        m_udpThread->wait();
-        delete m_udpThread;
-        delete m_udpClient;
-        m_udpThread = nullptr;
-        m_udpClient = nullptr;
-
-        throw std::runtime_error("Не удалось инициализировать UDPClient");
-    }
-
-    LOG_INFO("[APPLICATION] UDPClient успешно инициализирован");
-
-    // 9. Подключаем остальные сигналы для нормальной работы
-    QObject::connect(m_udpThread, &QThread::finished, m_udpClient, &UDPClient::deleteLater);
-    QObject::connect(m_udpThread, &QThread::finished, m_udpThread, &QThread::deleteLater);
-}
-
-void ApplicationManager::initializePPBCommunication()
-{
-    LOG_INFO("[APPLICATION] Инициализация PPBCommunication...");
-
-    if (!m_udpClient || !m_udpClient->isBound()) {
-        throw std::runtime_error("UDPClient не инициализирован");
-    }
-
-    // 1. Создаем PPBCommunication
-    m_communication = new PPBCommunication();
-
-    // 2. Создаем и настраиваем поток
-    m_communicationThread = new QThread();
-    m_communicationThread->setObjectName("CommunicationThread");
-
-    // 3. Перемещаем в поток
-    m_communication->moveToThread(m_communicationThread);
-
-    // 4. Подключаем завершение
-    QObject::connect(m_communicationThread, &QThread::finished,
-                     m_communication, &PPBCommunication::deleteLater);
-    QObject::connect(m_communicationThread, &QThread::finished,
-                     m_communicationThread, &QThread::deleteLater);
-
-    // 5. Запускаем поток
-    LOG_INFO("[APPLICATION] Запуск потока PPBCommunication...");
-    m_communicationThread->start();
-
-    // 6. Ждем запуска потока
-    QThread::msleep(100);
-
-    // 7. Используем событийный цикл для безопасной инициализации
+    // 3. Создаем событийный цикл для ожидания инициализации
     QEventLoop initLoop;
     QTimer timeoutTimer;
     timeoutTimer.setSingleShot(true);
@@ -199,20 +99,91 @@ void ApplicationManager::initializePPBCommunication()
     bool initSuccess = false;
     QString initError;
 
-    // Подключаем сигналы от PPBCommunication
-    QObject::connect(m_communication, &PPBCommunication::initialized,
-                     &initLoop, [&]() {
-                         initSuccess = true;
-                         initLoop.quit();
-                     });
+    // 4. Подключаем сигналы инициализации
+    auto conn = QObject::connect(m_udpClient.get(), &UDPClient::initialized,
+                                 &initLoop, [&]() {
+                                     LOG_INFO("[APPLICATION] UDPClient инициализирован");
+                                     initSuccess = true;
+                                     initLoop.quit();
+                                 });
 
-    QObject::connect(m_communication, &PPBCommunication::errorOccurred,
+    QObject::connect(m_udpClient.get(), &UDPClient::errorOccurred,
                      &initLoop, [&](const QString& error) {
+                         LOG_ERROR("[APPLICATION] Ошибка UDPClient: " + error);
                          initError = error;
                          initLoop.quit();
                      });
 
-    // Таймаут
+    // 5. Настраиваем таймаут
+    timeoutTimer.start(5000); // 5 секунд
+    QObject::connect(&timeoutTimer, &QTimer::timeout, &initLoop, [&]() {
+        if (!initSuccess) {
+            initError = "Таймаут инициализации UDPClient";
+            initLoop.quit();
+        }
+    });
+
+    // 6. Запускаем поток коммуникаций
+    LOG_INFO("[APPLICATION] Запуск коммуникационного потока...");
+    m_communicationThread->start();
+
+    // 7. Запускаем инициализацию UDPClient в его потоке
+    QMetaObject::invokeMethod(m_udpClient.get(), "initializeInThread", Qt::QueuedConnection);
+
+    // 8. Ждем завершения инициализации
+    initLoop.exec();
+
+    // 9. Отключаем временные соединения
+    QObject::disconnect(conn);
+
+    // 10. Проверяем результат
+    if (!initSuccess) {
+        throw std::runtime_error(initError.toStdString());
+    }
+
+    LOG_INFO("[APPLICATION] UDPClient успешно инициализирован (порт: " +
+             QString::number(m_udpClient->boundPort()) + ")");
+}
+
+void ApplicationManager::initializePPBCommunication()
+{
+    LOG_INFO("[APPLICATION] Инициализация PPBCommunication...");
+
+    // Проверяем, что UDPClient инициализирован
+    if (!m_udpClient || !m_udpClient->isBound()) {
+        throw std::runtime_error("UDPClient не инициализирован");
+    }
+
+    // 1. Создаем PPBCommunication
+    m_communication = std::make_unique<PPBCommunication>();
+
+    // 2. Перемещаем в тот же коммуникационный поток
+    m_communication->moveToThread(m_communicationThread);
+
+    // 3. Создаем событийный цикл для ожидания инициализации
+    QEventLoop initLoop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+
+    bool initSuccess = false;
+    QString initError;
+
+    // 4. Подключаем сигналы инициализации
+    auto conn = QObject::connect(m_communication.get(), &PPBCommunication::initialized,
+                                 &initLoop, [&]() {
+                                     LOG_INFO("[APPLICATION] PPBCommunication инициализирован");
+                                     initSuccess = true;
+                                     initLoop.quit();
+                                 });
+
+    QObject::connect(m_communication.get(), &PPBCommunication::errorOccurred,
+                     &initLoop, [&](const QString& error) {
+                         LOG_ERROR("[APPLICATION] Ошибка PPBCommunication: " + error);
+                         initError = error;
+                         initLoop.quit();
+                     });
+
+    // 5. Настраиваем таймаут
     timeoutTimer.start(5000); // 5 секунд
     QObject::connect(&timeoutTimer, &QTimer::timeout, &initLoop, [&]() {
         if (!initSuccess) {
@@ -221,17 +192,20 @@ void ApplicationManager::initializePPBCommunication()
         }
     });
 
-    // 8. Запускаем инициализацию в потоке объекта
-    QMetaObject::invokeMethod(m_communication, "initialize", Qt::QueuedConnection,
-                              Q_ARG(UDPClient*, m_udpClient));
+    // 6. Запускаем инициализацию PPBCommunication в его потоке
+    QMetaObject::invokeMethod(m_communication.get(), "initialize",
+                              Qt::QueuedConnection,
+                              Q_ARG(UDPClient*, m_udpClient.get()));
 
-    // 9. Ждем завершения инициализации
+    // 7. Ждем завершения инициализации
     initLoop.exec();
 
+    // 8. Отключаем временные соединения
+    QObject::disconnect(conn);
+
+    // 9. Проверяем результат
     if (!initSuccess) {
-        QString errorMsg = initError.isEmpty() ? "Неизвестная ошибка" : initError;
-        LOG_ERROR(QString("[APPLICATION] Ошибка инициализации PPBCommunication: %1").arg(errorMsg));
-        throw std::runtime_error(errorMsg.toStdString());
+        throw std::runtime_error(initError.toStdString());
     }
 
     LOG_INFO("[APPLICATION] PPBCommunication успешно инициализирован");
@@ -241,10 +215,8 @@ void ApplicationManager::initializeController()
 {
     LOG_INFO("[APPLICATION] Инициализация PPBController...");
 
-    m_controller = new PPBController(m_communication);
-
-    // Используем прямое присваивание, так как поле public
-    // Или добавьте метод setCommunication, если хотите
+    // Создаем контроллер в основном потоке
+    m_controller = std::make_unique<PPBController>(m_communication.get());
 
     LOG_INFO("[APPLICATION] PPBController успешно инициализирован");
 }
@@ -253,66 +225,118 @@ void ApplicationManager::initializeMainWindow()
 {
     LOG_INFO("[APPLICATION] Создание главного окна...");
 
-    // Передаем контроллер в конструктор TesterWindow
-    m_mainWindow = new TesterWindow(m_controller);
+    // Создаем главное окно в основном потоке
+    m_mainWindow = std::make_unique<TesterWindow>(m_controller.get());
 
     LOG_INFO("[APPLICATION] Главное окно создано");
 }
 
 void ApplicationManager::shutdown()
 {
+    if (!m_initialized) {
+        return;
+    }
+
     LOG_INFO("[APPLICATION] Завершение работы приложения...");
 
-    // Блокируем мьютекс перед доступом к объектам
     QMutexLocker locker(&m_shutdownMutex);
 
-    // 1. Удаляем главное окно (в основном потоке)
+    // 1. Закрываем главное окно
     if (m_mainWindow) {
+        LOG_INFO("[APPLICATION] Закрытие главного окна...");
         m_mainWindow->close();
-        // Не удаляем сразу, даем Qt самому управлять
-        m_mainWindow->deleteLater();
-        m_mainWindow = nullptr;
+        m_mainWindow.reset();
     }
 
     // 2. Останавливаем контроллер
     if (m_controller) {
-        m_controller->deleteLater();
-        m_controller = nullptr;
+        LOG_INFO("[APPLICATION] Остановка контроллера...");
+        m_controller.reset();
     }
 
-    // 3. Останавливаем потоки в ПРАВИЛЬНОМ порядке
-    // Сначала останавливаем прием данных
+    // 3. Останавливаем коммуникации
     if (m_communication) {
-        QMetaObject::invokeMethod(m_communication, "stop", Qt::BlockingQueuedConnection);
+        LOG_INFO("[APPLICATION] Остановка PPBCommunication...");
+
+        // Вызываем stop() в потоке объекта
+        QEventLoop stopLoop;
+        QTimer timeoutTimer;
+        timeoutTimer.setSingleShot(true);
+
+        bool stopSuccess = false;
+
+        // Подключаем сигнал завершения (если есть) или используем таймаут
+        QObject::connect(&timeoutTimer, &QTimer::timeout, &stopLoop, [&]() {
+            stopLoop.quit();
+        });
+
+        // Вызываем stop в потоке объекта
+        QMetaObject::invokeMethod(m_communication.get(), "stop", Qt::QueuedConnection,
+                                  Q_ARG(bool, true));
+
+        // Ждем завершения с таймаутом
+        timeoutTimer.start(2000); // 2 секунды
+        stopLoop.exec();
+
+        m_communication.reset();
     }
 
-    // Затем останавливаем потоки
+    // 4. Останавливаем UDPClient (автоматически при уничтожении)
+    if (m_udpClient) {
+        LOG_INFO("[APPLICATION] Остановка UDPClient...");
+        m_udpClient.reset();
+    }
+
+    // 5. Останавливаем коммуникационный поток
     if (m_communicationThread && m_communicationThread->isRunning()) {
+        LOG_INFO("[APPLICATION] Остановка коммуникационного потока...");
+
         m_communicationThread->quit();
-        m_communicationThread->wait(2000); // Ждем 2 секунды
-        if (m_communicationThread->isRunning()) {
-            m_communicationThread->terminate(); // Принудительно, если не останавливается
+
+        if (!m_communicationThread->wait(3000)) { // Ждем 3 секунды
+            LOG_WARNING("[APPLICATION] Принудительное завершение коммуникационного потока...");
+            m_communicationThread->terminate();
             m_communicationThread->wait();
         }
+
         delete m_communicationThread;
         m_communicationThread = nullptr;
     }
 
-    if (m_udpThread && m_udpThread->isRunning()) {
-        m_udpThread->quit();
-        m_udpThread->wait(2000);
-        if (m_udpThread->isRunning()) {
-            m_udpThread->terminate();
-            m_udpThread->wait();
-        }
-        delete m_udpThread;
-        m_udpThread = nullptr;
-    }
-
-    // 4. Удаляем объекты (они уже должны быть удалены deleteLater)
-    m_udpClient = nullptr;
-    m_communication = nullptr;
-
     m_initialized = false;
     LOG_INFO("[APPLICATION] Приложение завершено");
+}
+
+void ApplicationManager::cleanup()
+{
+    LOG_INFO("[APPLICATION] Очистка ресурсов...");
+
+    // Аналогично shutdown, но без блокировки и с обработкой ошибок
+    try {
+        if (m_mainWindow) {
+            m_mainWindow->close();
+            m_mainWindow.reset();
+        }
+
+        m_controller.reset();
+        m_communication.reset();
+        m_udpClient.reset();
+
+        if (m_communicationThread && m_communicationThread->isRunning()) {
+            m_communicationThread->quit();
+            if (!m_communicationThread->wait(1000)) {
+                m_communicationThread->terminate();
+                m_communicationThread->wait();
+            }
+            delete m_communicationThread;
+            m_communicationThread = nullptr;
+        }
+
+        m_initialized = false;
+
+    } catch (const std::exception& e) {
+        LOG_ERROR("[APPLICATION] Ошибка при очистке ресурсов: " + QString(e.what()));
+    } catch (...) {
+        LOG_ERROR("[APPLICATION] Неизвестная ошибка при очистке ресурсов");
+    }
 }

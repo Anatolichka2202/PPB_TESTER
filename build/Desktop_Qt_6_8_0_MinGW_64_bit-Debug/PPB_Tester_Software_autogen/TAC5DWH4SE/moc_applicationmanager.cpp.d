@@ -1,10 +1,8 @@
 C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/PPB_Tester_Software_autogen/TAC5DWH4SE/moc_applicationmanager.cpp: C:/qt_repos_2/PPB_Tester_Software/core/applicationmanager.h \
   C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/PPB_Tester_Software_autogen/moc_predefs.h \
-  C:/Qt/6.8.0/mingw_64/include/QtCore/QDeadlineTimer \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QMutex \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QObject \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QThread \
-  C:/Qt/6.8.0/mingw_64/include/QtCore/QWaitCondition \
   C:/Qt/6.8.0/mingw_64/include/QtCore/q20functional.h \
   C:/Qt/6.8.0/mingw_64/include/QtCore/q20memory.h \
   C:/Qt/6.8.0/mingw_64/include/QtCore/q20type_traits.h \
@@ -107,7 +105,6 @@ C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/PPB_
   C:/Qt/6.8.0/mingw_64/include/QtCore/qtypes.h \
   C:/Qt/6.8.0/mingw_64/include/QtCore/qutf8stringview.h \
   C:/Qt/6.8.0/mingw_64/include/QtCore/qversiontagging.h \
-  C:/Qt/6.8.0/mingw_64/include/QtCore/qwaitcondition.h \
   C:/Qt/6.8.0/mingw_64/include/QtCore/qxptype_traits.h \
   C:/Qt/6.8.0/mingw_64/include/QtCore/qyieldcpu.h \
   C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/algorithm \

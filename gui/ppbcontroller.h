@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QTimer>
 #include <QMap>
-#include "../core/ppbcommunication.h"
-#include "../core/dataconverter.h"
+#include "../core/communication/ppbcommunication.h"
+#include "../core/utilits/dataconverter.h"
 
 struct UIChannelState {
     float power;

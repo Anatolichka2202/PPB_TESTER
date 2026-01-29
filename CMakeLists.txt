@@ -17,19 +17,19 @@ set(PROJECT_SOURCES
         gui/testerwindow.cpp
         gui/testerwindow.h
         gui/testerwindow.ui
-        core/crc.cpp
-        core/crc.h
-        core/dataconverter.h
-        core/dataconverter.cpp
-        core/ds18b20.cpp
-        core/ds18b20.h
+        core/utilits/crc.cpp
+        core/utilits/crc.h
+        core/utilits/dataconverter.h
+        core/utilits/dataconverter.cpp
+        core/utilits/ds18b20.cpp
+        core/utilits/ds18b20.h
         core/logger.h
         core/logger.cpp
-        core/packetbuilder.h
-        core/packetbuilder.cpp
-        core/ppbprotocol.h
-        core/udpclient.cpp
-        core/udpclient.h
+        core/communication/packetbuilder.h
+        core/communication/packetbuilder.cpp
+        core/communication/ppbprotocol.h
+        core/communication/udpclient.cpp
+        core/communication/udpclient.h
         core/scenariomanager.h
         core/scenariomanager.cpp
 )
@@ -38,26 +38,28 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(PPB_Tester_Software
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        core/udpclient.h core/udpclient.cpp
-        core/packetbuilder.h core/packetbuilder.cpp
-        core/ppbprotocol.h
-        core/dataconverter.h core/dataconverter.cpp
-        core/ds18b20.h core/ds18b20.cpp
+        core/communication/udpclient.h core/communication/udpclient.cpp
+        core/communication/packetbuilder.h core/communication/packetbuilder.cpp
+        core/communication/ppbprotocol.h
+        core/utilits/dataconverter.h core/utilits/dataconverter.cpp
+        core/utilits/ds18b20.h core/utilits/ds18b20.cpp
         core/logger.h core/logger.cpp
-        core/crc.h core/crc.cpp
-        core/ppbcommunication.h core/ppbcommunication.cpp
+        core/utilits/crc.h core/utilits/crc.cpp
+        core/communication/ppbcommunication.h core/communication/ppbcommunication.cpp
 
 
 
 
 
         gui/pult.h gui/pult.cpp gui/pult.ui
-        core/commandandoperation.h core/commandandoperation.cpp
+        core/communication/commandandoperation.h core/communication/commandandoperation.cpp
         gui/ppbcontroller.h gui/ppbcontroller.cpp
-        core/commandinterface.h
+        core/communication/commandinterface.h
         analyzer/testsequencecomparator.h analyzer/testsequencecomparator.cpp
         core/applicationmanager.h core/applicationmanager.cpp
-        core/akip_manager.h core/akip_manager.cpp
+        core/AKIP/akip_manager.h core/AKIP/akip_manager.cpp
+        core/communication/communicationengine.h core/communication/communicationengine.cpp
+        core/utilits/fileloader.h core/utilits/fileloader.cpp
 
 
 

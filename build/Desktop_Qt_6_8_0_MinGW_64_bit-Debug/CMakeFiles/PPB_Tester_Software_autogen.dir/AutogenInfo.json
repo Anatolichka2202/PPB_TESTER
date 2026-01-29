@@ -9,104 +9,9 @@
 	[
 		"C:/qt_repos_2/PPB_Tester_Software/CMakeLists.txt",
 		"C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/.qtc/package-manager/auto-setup.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeDetermineSystem.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeSystem.cmake.in",
 		"C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/CMakeFiles/3.29.3/CMakeSystem.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeNinjaFindMake.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeSystemSpecificInitialize.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Platform/Windows-Initialize.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeDetermineCXXCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeDetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Platform/Windows-Determine-CXX.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeCompilerIdDetection.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/ADSP-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/ARMCC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/ARMClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/AppleClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Clang-DetermineCompilerInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Borland-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Clang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Clang-DetermineCompilerInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Cray-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/CrayClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Embarcadero-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Fujitsu-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/GHS-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/HP-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IAR-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Intel-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/MSVC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/NVHPC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/NVIDIA-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/OrangeC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/PGI-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/PathScale-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/SCO-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/TI-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/TIClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Tasking-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Watcom-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/XL-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/ADSP-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/ARMCC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/ARMClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/AppleClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Clang-DetermineCompilerInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Borland-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Clang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Clang-DetermineCompilerInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Cray-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/CrayClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Embarcadero-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Fujitsu-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/GHS-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/HP-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IAR-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Intel-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/MSVC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/NVHPC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/NVIDIA-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/OrangeC-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/PGI-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/PathScale-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/SCO-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/TI-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/TIClang-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Tasking-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/Watcom-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/XL-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeFindBinUtils.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/GNU-FindBinUtils.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeCXXCompiler.cmake.in",
 		"C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/CMakeFiles/3.29.3/CMakeCXXCompiler.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeSystemSpecificInformation.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeGenericSystem.cmake",
@@ -120,27 +25,11 @@
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Compiler/CMakeCommonCompilerMacros.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Platform/Windows-GNU-CXX.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Platform/Windows-GNU.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeDetermineRCCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeRCCompiler.cmake.in",
 		"C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/CMakeFiles/3.29.3/CMakeRCCompiler.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeRCInformation.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Platform/Windows-windres.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeTestRCCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeCommonLanguageInclude.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeTestCompilerCommon.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Internal/CMakeDetermineLinkerId.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeParseImplicitIncludeInfo.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeParseImplicitLinkInfo.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeParseLibraryArchitecture.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeTestCompilerCommon.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeCXXCompilerABI.cpp",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeDetermineCompileFeatures.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Internal/FeatureTesting.cmake",
-		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeCXXCompiler.cmake.in",
-		"C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/CMakeFiles/3.29.3/CMakeCXXCompiler.cmake",
 		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/Platform/Windows-GNU-CXX-ABI.cmake",
+		"C:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeCommonLanguageInclude.cmake",
 		"C:/Qt/6.8.0/mingw_64/lib/cmake/Qt6/Qt6ConfigVersion.cmake",
 		"C:/Qt/6.8.0/mingw_64/lib/cmake/Qt6/Qt6ConfigVersionImpl.cmake",
 		"C:/Qt/6.8.0/mingw_64/lib/cmake/Qt6/Qt6Config.cmake",
@@ -453,9 +342,9 @@
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/akip_manager.h",
+			"C:/qt_repos_2/PPB_Tester_Software/core/AKIP/akip_manager.h",
 			"MU",
-			"TAC5DWH4SE/moc_akip_manager.cpp",
+			"LP6EWUJND7/moc_akip_manager.cpp",
 			null
 		],
 		[
@@ -465,33 +354,45 @@
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/commandandoperation.h",
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/commandandoperation.h",
 			"MU",
-			"TAC5DWH4SE/moc_commandandoperation.cpp",
+			"Z4V4L66CV5/moc_commandandoperation.cpp",
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/commandinterface.h",
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/commandinterface.h",
 			"MU",
-			"TAC5DWH4SE/moc_commandinterface.cpp",
+			"Z4V4L66CV5/moc_commandinterface.cpp",
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/crc.h",
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/communicationengine.h",
 			"MU",
-			"TAC5DWH4SE/moc_crc.cpp",
+			"Z4V4L66CV5/moc_communicationengine.cpp",
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/dataconverter.h",
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/packetbuilder.h",
 			"MU",
-			"TAC5DWH4SE/moc_dataconverter.cpp",
+			"Z4V4L66CV5/moc_packetbuilder.cpp",
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/ds18b20.h",
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/ppbcommunication.h",
 			"MU",
-			"TAC5DWH4SE/moc_ds18b20.cpp",
+			"Z4V4L66CV5/moc_ppbcommunication.cpp",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/ppbprotocol.h",
+			"MU",
+			"Z4V4L66CV5/moc_ppbprotocol.cpp",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/udpclient.h",
+			"MU",
+			"Z4V4L66CV5/moc_udpclient.cpp",
 			null
 		],
 		[
@@ -501,33 +402,33 @@
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/packetbuilder.h",
-			"MU",
-			"TAC5DWH4SE/moc_packetbuilder.cpp",
-			null
-		],
-		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/ppbcommunication.h",
-			"MU",
-			"TAC5DWH4SE/moc_ppbcommunication.cpp",
-			null
-		],
-		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/ppbprotocol.h",
-			"MU",
-			"TAC5DWH4SE/moc_ppbprotocol.cpp",
-			null
-		],
-		[
 			"C:/qt_repos_2/PPB_Tester_Software/core/scenariomanager.h",
 			"MU",
 			"TAC5DWH4SE/moc_scenariomanager.cpp",
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/udpclient.h",
+			"C:/qt_repos_2/PPB_Tester_Software/core/utilits/crc.h",
 			"MU",
-			"TAC5DWH4SE/moc_udpclient.cpp",
+			"TJPDBLDF7W/moc_crc.cpp",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/utilits/dataconverter.h",
+			"MU",
+			"TJPDBLDF7W/moc_dataconverter.cpp",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/utilits/ds18b20.h",
+			"MU",
+			"TJPDBLDF7W/moc_ds18b20.cpp",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/utilits/fileloader.h",
+			"MU",
+			"TJPDBLDF7W/moc_fileloader.cpp",
 			null
 		],
 		[
@@ -627,41 +528,63 @@
 			"MU",
 			null
 		],
-		[ "C:/qt_repos_2/PPB_Tester_Software/core/akip_manager.cpp", "MU", null ],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/AKIP/akip_manager.cpp",
+			"MU",
+			null
+		],
 		[
 			"C:/qt_repos_2/PPB_Tester_Software/core/applicationmanager.cpp",
 			"MU",
 			null
 		],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/commandandoperation.cpp",
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/commandandoperation.cpp",
 			"MU",
 			null
 		],
-		[ "C:/qt_repos_2/PPB_Tester_Software/core/crc.cpp", "MU", null ],
 		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/dataconverter.cpp",
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/communicationengine.cpp",
 			"MU",
 			null
 		],
-		[ "C:/qt_repos_2/PPB_Tester_Software/core/ds18b20.cpp", "MU", null ],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/packetbuilder.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/ppbcommunication.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/communication/udpclient.cpp",
+			"MU",
+			null
+		],
 		[ "C:/qt_repos_2/PPB_Tester_Software/core/logger.cpp", "MU", null ],
-		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/packetbuilder.cpp",
-			"MU",
-			null
-		],
-		[
-			"C:/qt_repos_2/PPB_Tester_Software/core/ppbcommunication.cpp",
-			"MU",
-			null
-		],
 		[
 			"C:/qt_repos_2/PPB_Tester_Software/core/scenariomanager.cpp",
 			"MU",
 			null
 		],
-		[ "C:/qt_repos_2/PPB_Tester_Software/core/udpclient.cpp", "MU", null ],
+		[ "C:/qt_repos_2/PPB_Tester_Software/core/utilits/crc.cpp", "MU", null ],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/utilits/dataconverter.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/utilits/ds18b20.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/qt_repos_2/PPB_Tester_Software/core/utilits/fileloader.cpp",
+			"MU",
+			null
+		],
 		[ "C:/qt_repos_2/PPB_Tester_Software/gui/ppbcontroller.cpp", "MU", null ],
 		[ "C:/qt_repos_2/PPB_Tester_Software/gui/pult.cpp", "MU", null ],
 		[ "C:/qt_repos_2/PPB_Tester_Software/gui/testerwindow.cpp", "MU", null ],

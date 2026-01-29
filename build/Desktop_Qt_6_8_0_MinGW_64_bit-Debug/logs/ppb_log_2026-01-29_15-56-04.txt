@@ -1,0 +1,74 @@
+=== Начало лога: 2026-01-29_15-56-04 ===
+[15:56:04.620] [INFO] Логирование инициализировано
+[15:56:04.620] [INFO] [MAIN] Запуск приложения...
+[15:56:04.620] [INFO] [APPLICATION] Начало инициализации приложения...
+[15:56:04.620] [INFO] [APPLICATION] Инициализация UDPClient...
+[15:56:04.620] [INFO] [APPLICATION] Запуск коммуникационного потока...
+[15:56:04.621] [INFO] UDPClient::initializeInThread - поток: 15300
+[15:56:04.621] [INFO] UDPClient::setupSocket
+[15:56:04.623] [INFO] UDPClient::bind - попытка привязки к порту 101
+[15:56:04.626] [INFO] UDPClient успешно привязан к порту 101 на адресе 0.0.0.0
+[15:56:04.626] [INFO] UDPClient сокет настроен и привязан к порту 101
+[15:56:04.626] [INFO] UDPClient успешно инициализирован в потоке
+[15:56:04.626] [INFO] [APPLICATION] UDPClient инициализирован
+[15:56:04.626] [INFO] [APPLICATION] UDPClient успешно инициализирован (порт: 101)
+[15:56:04.626] [INFO] [APPLICATION] Инициализация PPBCommunication...
+[15:56:04.626] [INFO] PPBCommunication конструктор вызван
+[15:56:04.626] [INFO] PPBCommunication::initialize начат в потоке: 15300
+[15:56:04.627] [INFO] communicationengine создан
+[15:56:04.627] [INFO] PPBCommunication::initialize: инициализация завершена успешно
+[15:56:04.627] [INFO] [APPLICATION] PPBCommunication инициализирован
+[15:56:04.627] [INFO] [APPLICATION] PPBCommunication успешно инициализирован
+[15:56:04.627] [INFO] [APPLICATION] Инициализация PPBController...
+[15:56:04.627] [INFO] PPBController: все сигналы подключены
+[15:56:04.627] [INFO] [APPLICATION] PPBController успешно инициализирован
+[15:56:04.627] [INFO] [APPLICATION] Создание главного окна...
+[15:56:04.631] [INFO] [APPLICATION] Главное окно создано
+[15:56:04.632] [INFO] [APPLICATION] Инициализация приложения завершена успешно
+[15:56:04.690] [INFO] [MAIN] Приложение запущено
+[15:56:04.692] [INFO] Программа управления ППБ запущена
+[15:56:18.396] [INFO] PPBController::connectToPPB: address=0x0001, ip=127.0.0.1, port=8888
+[15:56:18.396] [INFO] PPBCommunication::connectToPPB (фасад): address=0x0001, ip=127.0.0.1, port=8888
+[15:56:18.397] [INFO] communicationengine::connectToPPB: адрес=0x0001, IP=127.0.0.1, порт=8888
+[15:56:18.435] [DEBUG] UDPClient::sendTo: адрес=127.0.0.1, порт=8888, размер=8 байт
+[15:56:18.435] [DEBUG] UDPClient отправлено 8 байт на 127.0.0.1:8888
+[15:56:18.435] [INFO] Отправлен пакет: Опрос состояния
+[15:56:18.436] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.436] [DEBUG] Данные [4 байт]: 01 00 00 0D 
+[15:56:18.436] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.436] [DEBUG] Состояние изменено: 0 -> 3
+[15:56:18.436] [DEBUG] PPBCommunication::startTimeoutTimer - вызов игнорируется (управляется в движке)
+[15:56:18.436] [INFO] PPBCommunication занят выполнением команды
+[15:56:18.445] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.445] [DEBUG] Данные [4 байт]: 04 04 00 E1 
+[15:56:18.445] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.456] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.456] [DEBUG] Данные [4 байт]: 2D 2E 01 8F 
+[15:56:18.456] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.466] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.466] [DEBUG] Данные [4 байт]: 30 31 02 B2 
+[15:56:18.466] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.475] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.475] [DEBUG] Данные [4 байт]: 33 34 03 3E 
+[15:56:18.475] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.485] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.485] [DEBUG] Данные [4 байт]: 78 00 04 F2 
+[15:56:18.485] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.495] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.495] [DEBUG] Данные [4 байт]: 78 00 04 F2 
+[15:56:18.495] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.505] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.505] [DEBUG] Данные [4 байт]: 78 00 04 F2 
+[15:56:18.505] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.515] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.515] [DEBUG] Данные [4 байт]: 78 00 04 F2 
+[15:56:18.515] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:18.525] [DEBUG] UDPClient получено 4 байт от ::ffff:127.0.0.1:8888
+[15:56:18.525] [DEBUG] Данные [4 байт]: 78 00 04 F2 
+[15:56:18.525] [DEBUG] communicationengine::onDataReceived: размер=4, от=::ffff:127.0.0.1:8888
+[15:56:21.454] [WARNING] Команда Опрос состояния: Таймаут операции
+[15:56:26.369] [INFO] Активирован пульт управления
+[15:56:27.330] [INFO] PPBCommunication::executeCommand (фасад): cmd=0, address=0x0001
+[15:56:27.331] [INFO] communicationengine::executeCommand: команда=0, адрес=0001
+[15:56:27.331] [ERROR] Необработанное исключение Windows: Нарушение доступа к памяти (Access Violation)
+[15:56:27.331] [ERROR] Адрес исключения: 0x7ff70ccbf79a

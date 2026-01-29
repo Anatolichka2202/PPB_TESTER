@@ -1,7 +1,8 @@
 PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QByteArray \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QDateTime \
-	C:/Qt/6.8.0/mingw_64/include/QtCore/QDeadlineTimer \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/QDebug \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/QDir \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QFile \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QMap \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QMutex \
@@ -13,7 +14,6 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QThread \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QTimer \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QVector \
-	C:/Qt/6.8.0/mingw_64/include/QtCore/QWaitCondition \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QWeakPointer \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/q20functional.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/q20iterator.h \
@@ -52,11 +52,14 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qdatetime.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qdeadlinetimer.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qdebug.h \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/qdir.h \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/qdirlisting.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qelapsedtimer.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qendian.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qexceptionhandling.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qfile.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qfiledevice.h \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/qfileinfo.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qflags.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qfloat16.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qforeach.h \
@@ -132,6 +135,7 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qtextstream.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qthread.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qtimer.h \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/qtimezone.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qtmetamacros.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qtnoop.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qtpreprocessorsupport.h \
@@ -148,7 +152,6 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qvarlengtharray.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qvector.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qversiontagging.h \
-	C:/Qt/6.8.0/mingw_64/include/QtCore/qwaitcondition.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qxptype_traits.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/qyieldcpu.h \
 	C:/Qt/6.8.0/mingw_64/include/QtGui/qaction.h \
@@ -512,6 +515,7 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/cpp_type_traits.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/cxxabi_forced.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/cxxabi_init_exception.h \
+	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/deque.tcc \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/enable_special_members.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/erase_if.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/exception.h \
@@ -567,6 +571,7 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_algobase.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_bvector.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_construct.h \
+	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_deque.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_function.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_heap.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_iterator.h \
@@ -616,6 +621,7 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/cwctype \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/debug/assertions.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/debug/debug.h \
+	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/deque \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/exception \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/ext/aligned_buffer.h \
 	C:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/ext/alloc_traits.h \
@@ -737,30 +743,34 @@ PPB_Tester_Software_autogen/timestamp: \
 	C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/CMakeFiles/3.29.3/CMakeRCCompiler.cmake \
 	C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/CMakeFiles/3.29.3/CMakeSystem.cmake \
 	C:/qt_repos_2/PPB_Tester_Software/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/PPB_Tester_Software_autogen/moc_predefs.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/akip_manager.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/akip_manager.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/AKIP/akip_manager.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/AKIP/akip_manager.h \
 	C:/qt_repos_2/PPB_Tester_Software/core/applicationmanager.cpp \
 	C:/qt_repos_2/PPB_Tester_Software/core/applicationmanager.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/commandandoperation.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/commandandoperation.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/commandinterface.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/crc.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/crc.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/dataconverter.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/dataconverter.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/ds18b20.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/ds18b20.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/commandandoperation.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/commandandoperation.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/commandinterface.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/communicationengine.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/communicationengine.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/packetbuilder.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/packetbuilder.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/ppbcommunication.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/ppbcommunication.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/ppbprotocol.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/udpclient.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/communication/udpclient.h \
 	C:/qt_repos_2/PPB_Tester_Software/core/logger.cpp \
 	C:/qt_repos_2/PPB_Tester_Software/core/logger.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/packetbuilder.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/packetbuilder.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/ppbcommunication.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/ppbcommunication.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/ppbprotocol.h \
 	C:/qt_repos_2/PPB_Tester_Software/core/scenariomanager.cpp \
 	C:/qt_repos_2/PPB_Tester_Software/core/scenariomanager.h \
-	C:/qt_repos_2/PPB_Tester_Software/core/udpclient.cpp \
-	C:/qt_repos_2/PPB_Tester_Software/core/udpclient.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/crc.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/crc.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/dataconverter.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/dataconverter.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/ds18b20.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/ds18b20.h \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/fileloader.cpp \
+	C:/qt_repos_2/PPB_Tester_Software/core/utilits/fileloader.h \
 	C:/qt_repos_2/PPB_Tester_Software/gui/ppbcontroller.cpp \
 	C:/qt_repos_2/PPB_Tester_Software/gui/ppbcontroller.h \
 	C:/qt_repos_2/PPB_Tester_Software/gui/pult.cpp \

@@ -1,0 +1,41 @@
+=== Начало лога: 2026-01-29_09-27-20 ===
+[09:27:20.316] [INFO] Логирование инициализировано
+[09:27:20.317] [INFO] [MAIN] Запуск приложения...
+[09:27:20.317] [INFO] [APPLICATION] Начало инициализации приложения...
+[09:27:20.317] [INFO] [APPLICATION] Инициализация UDPClient...
+[09:27:20.317] [INFO] [APPLICATION] Запуск коммуникационного потока...
+[09:27:20.317] [INFO] UDPClient::initializeInThread - поток: 13612
+[09:27:20.318] [INFO] UDPClient::setupSocket
+[09:27:20.318] [INFO] UDPClient::bind - попытка привязки к порту 101
+[09:27:20.326] [INFO] UDPClient успешно привязан к порту 101 на адресе 0.0.0.0
+[09:27:20.326] [INFO] UDPClient сокет настроен и привязан к порту 101
+[09:27:20.326] [INFO] UDPClient успешно инициализирован в потоке
+[09:27:20.327] [INFO] [APPLICATION] UDPClient инициализирован
+[09:27:20.327] [INFO] [APPLICATION] UDPClient успешно инициализирован (порт: 101)
+[09:27:20.327] [INFO] [APPLICATION] Инициализация PPBCommunication...
+[09:27:20.328] [INFO] PPBCommunication конструктор вызван
+[09:27:20.328] [INFO] PPBCommunication::initialize начат в потоке: 13612
+[09:27:20.328] [INFO] communicationengine создан
+[09:27:20.328] [INFO] PPBCommunication::initialize: инициализация завершена успешно
+[09:27:20.328] [INFO] [APPLICATION] PPBCommunication инициализирован
+[09:27:20.329] [INFO] [APPLICATION] PPBCommunication успешно инициализирован
+[09:27:20.329] [INFO] [APPLICATION] Инициализация PPBController...
+[09:27:20.329] [INFO] PPBController: все сигналы подключены
+[09:27:20.329] [INFO] [APPLICATION] PPBController успешно инициализирован
+[09:27:20.329] [INFO] [APPLICATION] Создание главного окна...
+[09:27:20.374] [INFO] [APPLICATION] Главное окно создано
+[09:27:20.375] [INFO] [APPLICATION] Инициализация приложения завершена успешно
+[09:27:20.507] [INFO] [MAIN] Приложение запущено
+[09:27:20.509] [INFO] Программа управления ППБ запущена
+[09:27:25.149] [INFO] PPBController::connectToPPB: address=0x0001, ip=198.168.0.230, port=1080
+[09:27:25.149] [INFO] PPBCommunication::connectToPPB (фасад): address=0x0001, ip=198.168.0.230, port=1080
+[09:27:25.150] [INFO] communicationengine::connectToPPB: адрес=0x0001, IP=198.168.0.230, порт=1080
+[09:28:16.408] [DEBUG] UDPClient::sendTo: адрес=198.168.0.230, порт=1080, размер=8 байт
+[09:28:16.411] [DEBUG] UDPClient отправлено 8 байт на 198.168.0.230:1080
+[09:28:16.412] [INFO] Отправлен пакет: Опрос состояния
+[09:28:19.399] [WARNING] Команда Опрос состояния: Таймаут операции
+[09:29:27.912] [INFO] Программа завершена
+[09:29:27.920] [INFO] [APPLICATION] Завершение работы приложения...
+[09:29:27.920] [INFO] [APPLICATION] Закрытие главного окна...
+[09:29:27.922] [INFO] [APPLICATION] Остановка контроллера...
+[09:29:27.922] [INFO] [APPLICATION] Остановка PPBCommunication...

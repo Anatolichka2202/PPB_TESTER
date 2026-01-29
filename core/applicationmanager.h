@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QThread>
 #include <QMutex>
-#include <QWaitCondition>
+#include <memory>
 
 class UDPClient;
 class PPBCommunication;
@@ -21,9 +21,11 @@ public:
     bool initialize();
     void shutdown();
 
-    UDPClient* udpClient() const { return m_udpClient; }
-    PPBController* controller() const { return m_controller; }
-    TesterWindow* mainWindow() const { return m_mainWindow; }
+    // Геттеры для доступа к компонентам
+    UDPClient* udpClient() const { return m_udpClient.get(); }
+    PPBCommunication* communication() const { return m_communication.get(); }
+    PPBController* controller() const { return m_controller.get(); }
+    TesterWindow* mainWindow() const { return m_mainWindow.get(); }
 
     bool isInitialized() const { return m_initialized; }
 
@@ -40,21 +42,24 @@ private:
     void initializeController();
     void initializeMainWindow();
 
+    void cleanup();
+
 private:
     static ApplicationManager* m_instance;
     static QMutex m_instanceMutex;
 
     bool m_initialized;
 
-    UDPClient* m_udpClient;
-    QThread* m_udpThread;
-
-    PPBCommunication* m_communication;
+    // Коммуникационный поток (UDP + PPBCommunication + communicationengine)
     QThread* m_communicationThread;
 
-    PPBController* m_controller;
-    TesterWindow* m_mainWindow;
+    // Компоненты приложения
+    std::unique_ptr<UDPClient> m_udpClient;
+    std::unique_ptr<PPBCommunication> m_communication;
+    std::unique_ptr<PPBController> m_controller;
+    std::unique_ptr<TesterWindow> m_mainWindow;
 
-     QMutex m_shutdownMutex;
+    QMutex m_shutdownMutex;
 };
+
 #endif // APPLICATIONMANAGER_H

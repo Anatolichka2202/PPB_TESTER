@@ -1,7 +1,7 @@
 // testsequencecomparator.cpp
 #include "testsequencecomparator.h"
 #include <QStringList>
-#include "../core/packetbuilder.h"
+#include "../core/communication/packetbuilder.h"
 #include <QSet>
 TestSequenceComparator::Result TestSequenceComparator::compare(
     const QVector<DataPacket>& expected,
