@@ -33,6 +33,8 @@ public:
     // Установка callback для UI
     static void setUICallback(UICallback callback);
 
+signals:
+    void messageLogged(const QString& message);  // Сигнал для UI
 private:
     Logger() = delete; // Статический класс
      static QMutex m_logMutex;

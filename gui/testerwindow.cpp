@@ -23,6 +23,8 @@ TesterWindow::TesterWindow(PPBController* controller, QWidget *parent)
 
     ui->setupUi(this);
 
+
+
  QTimer::singleShot(0, this, [this]() {
         if (!m_controller) {
             LOG_ERROR("TesterWindow: контроллер не передан!");
@@ -119,60 +121,83 @@ void TesterWindow::connectSignals()
     // connect(ui->pushButtonPRBS_S2M, &QPushButton::clicked, this, &TesterWindow::onPRBSS2MClicked);
 
     // Контроллер -> UI
+    // 1. Изменение состояния подключения
     connect(m_controller, &PPBController::connectionStateChanged,
             this, &TesterWindow::onControllerConnectionStateChanged);
-    connect(m_controller, &PPBController::logMessage,
-            this, &TesterWindow::onControllerLogMessage);
+
+    // 2. Получение статуса от ППБ (РАНЬШЕ НЕ БЫЛО ПОДКЛЮЧЕНО!)
+    connect(m_controller, &PPBController::statusReceived,
+            this, &TesterWindow::onControllerStatusReceived);
+
+    // 3. Ошибки при работе
     connect(m_controller, &PPBController::errorOccurred,
             this, &TesterWindow::onControllerErrorOccurred);
+
+    // 4. Сообщения для лога
+    connect(m_controller, &PPBController::logMessage,
+            this, &TesterWindow::onControllerLogMessage);
+
+    // 5. Обновление состояния каналов
     connect(m_controller, &PPBController::channelStateUpdated,
             this, &TesterWindow::onControllerChannelStateUpdated);
+
+    // 6. Изменение состояния автоопроса
     connect(m_controller, &PPBController::autoPollToggled,
             this, &TesterWindow::onAutoPollToggledFromController);
+
+    // 7. Прогресс выполнения операций
     connect(m_controller, &PPBController::operationProgress,
             this, &TesterWindow::onOperationProgress);
+
+    // 8. Завершение операций
     connect(m_controller, &PPBController::operationCompleted,
             this, &TesterWindow::onOperationCompleted);
+
+    // 9. ИЗМЕНЕНИЕ СОСТОЯНИЯ ЗАНЯТОСТИ (НОВОЕ!)
+    connect(m_controller, &PPBController::busyChanged,
+            this, &TesterWindow::onControllerBusyChanged);
+
+    LOG_DEBUG("TesterWindow: все сигналы подключены");
 }
 
 // ==================== СЛОТЫ ДЛЯ UI ====================
 
 void TesterWindow::onConnectClicked()
 {
-    QString ip_t = ui->lineEditIPAddress->text();
+    QString ip = ui->lineEditIPAddress->text();
     QString portStr = ui->lineEditPort->text();
 
     // Валидация IP
     QHostAddress addr;
-    if (!addr.setAddress(ip_t)) {
+    if (!addr.setAddress(ip)) {
         QMessageBox::warning(this, "Ошибка", "Неверный IP-адрес!");
         return;
     }
 
     // Валидация порта
     bool ok;
-    quint16 port_t = portStr.toUShort(&ok);
-    if (!ok || port_t == 0 || port_t > 65535) {
+    quint16 port = portStr.toUShort(&ok);
+    if (!ok || port == 0 || port > 65535) {
         QMessageBox::warning(this, "Ошибка", "Неверный порт!");
         return;
     }
 
     uint16_t address = getSelectedAddress();
-    QString ip = getSelectedIP();
-    quint16 port = getSelectedPort();
-
-
     PPBState state = m_controller->connectionState();
 
+    // ВАЖНО: НЕ БЛОКИРУЕМ кнопку здесь!
+    // Состояние кнопки обновится АВТОМАТИЧЕСКИ через onControllerConnectionStateChanged
+
     if (state == PPBState::Idle) {
+        LOG_DEBUG("TesterWindow: запрос подключения к адресу 0x" +
+                  QString::number(address, 16));
         m_controller->connectToPPB(address, ip, port);
-        ui->pushButtonConnect->setEnabled(false);
-        ui->pushButtonConnect->setText("Подключение...");
     } else if (state == PPBState::Ready) {
+        LOG_DEBUG("TesterWindow: запрос отключения");
         m_controller->disconnect();
-        ui->pushButtonConnect->setEnabled(false);
-        ui->pushButtonConnect->setText("Отключение...");
     }
+    // Для других состояний (SendingCommand, WaitingData) не делаем ничего
+    // Кнопка уже должна быть заблокирована через updateControlsState()
 }
 
 void TesterWindow::onPollStatusClicked()
@@ -252,15 +277,29 @@ void TesterWindow::onControllerConnectionStateChanged(PPBState state)
 
 void TesterWindow::onControllerStatusReceived(uint16_t address, const QVector<QByteArray>& data)
 {
-    appendToLog(QString("Получен статус ППБ %1").arg(address));
+    // Логируем получение статуса
+    LOG_DEBUG(QString("TesterWindow: получен статус ППБ 0x%1, %2 пакетов")
+                  .arg(address, 4, 16, QChar('0')).arg(data.size()));
+
+    // Можно добавить дополнительную обработку здесь
+    // Например, парсить данные и обновлять другие элементы UI
+
+    // Пока просто добавляем в лог
+    appendToLog(QString("Статус ППБ %1 получен (%2 пакетов)")
+                    .arg(address).arg(data.size()));
 }
 
 void TesterWindow::onControllerErrorOccurred(const QString& error)
 {
     appendToLog("[ОШИБКА] " + error);
     showStatusMessage(error, 5000);
-    ui->pushButtonConnect->setEnabled(true);
-    ui->pushButtonConnect->setText("Подключиться");
+
+    // ВАЖНО: НЕ разблокируем кнопку вручную!
+    // Вместо этого обновляем весь UI через стандартные методы
+    updateControlsState();
+    updateConnectionUI();
+
+    LOG_DEBUG("TesterWindow: обработана ошибка: " + error);
 }
 
 void TesterWindow::onControllerChannelStateUpdated(uint8_t ppbIndex, int channel, const UIChannelState& state)
@@ -483,17 +522,42 @@ quint16 TesterWindow::getSelectedPort() const
 
 void TesterWindow::updateControlsState()
 {
-    bool isConnected = (m_controller->connectionState() == PPBState::Ready);
+    PPBState state = m_controller->connectionState();
     bool isBusy = m_controller->isBusy();
 
-    ui->pushButtonPollStatus->setEnabled(isConnected && !isBusy);
-    ui->pushButtonReset->setEnabled(isConnected && !isBusy);
-    ui->pushButtonApplyToPPB1->setEnabled(isConnected && !isBusy);
-    ui->pushButtonTestSequence->setEnabled(isConnected && !isBusy);
-    ui->radioButtonFUTransmit->setEnabled(isConnected && !isBusy);
-    ui->radioButtonFUReceive->setEnabled(isConnected && !isBusy);
-    ui->checkBoxAutoPoll->setEnabled(isConnected && !isBusy);
-    ui->pushButtonConnect->setEnabled(!isBusy || isConnected);
+    LOG_DEBUG(QString("TesterWindow::updateControlsState: state=%1, busy=%2")
+                  .arg(static_cast<int>(state)).arg(isBusy));
+
+    // Определяем, подключены ли мы (только состояние Ready означает подключение)
+    bool isConnected = (state == PPBState::Ready);
+
+    // === ЭЛЕМЕНТЫ, ДОСТУПНЫЕ ТОЛЬКО ПРИ ПОДКЛЮЧЕНИИ И НЕ ВО ВРЕМЯ ОПЕРАЦИИ ===
+    bool connectedAndNotBusy = isConnected && !isBusy;
+
+    ui->pushButtonPollStatus->setEnabled(connectedAndNotBusy);
+    ui->pushButtonReset->setEnabled(connectedAndNotBusy);
+    ui->pushButtonApplyToPPB1->setEnabled(connectedAndNotBusy);
+    ui->pushButtonTestSequence->setEnabled(connectedAndNotBusy);
+    ui->radioButtonFUTransmit->setEnabled(connectedAndNotBusy);
+    ui->radioButtonFUReceive->setEnabled(connectedAndNotBusy);
+    ui->checkBoxAutoPoll->setEnabled(connectedAndNotBusy);
+
+    // === КНОПКА ПОДКЛЮЧЕНИЯ/ОТКЛЮЧЕНИЯ ===
+    // Доступна, если:
+    // 1. Система не занята (не isBusy)
+    // 2. И мы в состоянии Idle (для подключения) или Ready (для отключения)
+    bool connectButtonEnabled = !isBusy && (state == PPBState::Idle || state == PPBState::Ready);
+    ui->pushButtonConnect->setEnabled(connectButtonEnabled);
+
+    // === ДОПОЛНИТЕЛЬНЫЕ ЭЛЕМЕНТЫ ===
+    ui->comboBoxPPBSelect->setEnabled(!isBusy);
+    ui->lineEditIPAddress->setEnabled(!isBusy && !isConnected);
+    ui->lineEditPort->setEnabled(!isBusy && !isConnected);
+    ui->pushButtonClearLog->setEnabled(true);  // Всегда доступна
+    ui->pushButtonExportLog->setEnabled(true); // Всегда доступна
+    ui->pult_active->setEnabled(!isBusy);      // Доступна, когда система не занята
+
+    LOG_DEBUG("TesterWindow::updateControlsState: завершено");
 }
 
 void TesterWindow::updateConnectionUI()
@@ -510,32 +574,40 @@ void TesterWindow::updateConnectionUI()
         style = "border-radius: 10px; border: 2px solid #666; background-color: #ff0000;";
         text = "Подключиться";
         tooltip = "Отключено";
-        ui->pushButtonConnect->setEnabled(true);
         break;
+
     case PPBState::Ready:
         if (busy) {
             style = "border-radius: 10px; border: 2px solid #666; background-color: #ffff00;";
             text = "Выполняется операция...";
             tooltip = "Выполняется операция";
-            ui->pushButtonConnect->setEnabled(false);
         } else {
             style = "border-radius: 10px; border: 2px solid #666; background-color: #00ff00;";
             text = "Отключиться";
             tooltip = "Подключено";
-            ui->pushButtonConnect->setEnabled(true);
         }
         break;
-    default:
+
+    case PPBState::SendingCommand:
+    case PPBState::WaitingData:
         style = "border-radius: 10px; border: 2px solid #666; background-color: #ffff00;";
+        text = "Операция...";
+        tooltip = "Выполняется команда";
+        break;
+
+    default:
+        style = "border-radius: 10px; border: 2px solid #666; background-color: #cccccc;";
         text = "Ожидание...";
-        tooltip = "Ожидание";
-        ui->pushButtonConnect->setEnabled(false);
+        tooltip = "Неизвестное состояние";
         break;
     }
 
     ui->labelConnectionStatus->setStyleSheet(style);
     ui->labelConnectionStatus->setToolTip(tooltip);
     ui->pushButtonConnect->setText(text);
+
+    LOG_DEBUG(QString("TesterWindow::updateConnectionUI: state=%1, text='%2'")
+                  .arg(static_cast<int>(state)).arg(text));
 }
 
 void TesterWindow::setLeftPanelEnabled(bool enabled)
@@ -616,15 +688,34 @@ void TesterWindow::onPultActiveClicked()
     m_pultWindow = new pult(address, m_controller, nullptr);
     m_pultWindow->setAttribute(Qt::WA_DeleteOnClose);
     m_pultWindow->setWindowTitle(QString("Пульт управления ППБ %1").arg(ui->comboBoxPPBSelect->currentText()));
-    m_pultWindow->show();
 
-    // Соединяем сигнал закрытия для очистки указателя
+    // Устанавливаем иконку (если нужно)
+     m_pultWindow->setWindowIcon(QIcon("../remote-control.png"));
+
+    // Подключаем сигнал закрытия
     connect(m_pultWindow, &pult::destroyed, this, [this]() {
+        LOG_DEBUG("TesterWindow: пульт уничтожен");
         m_pultWindow = nullptr;
     });
 
-    Logger::info("Активирован пульт управления");
+    // Показываем пульт
+    m_pultWindow->show();
+
+    Logger::info("Активирован пульт управления для ППБ " +
+                 QString::number(address, 16));
+    appendToLog("Открыт пульт управления");
 }
 
+void TesterWindow::onControllerBusyChanged(bool busy)
+{
+    LOG_DEBUG("TesterWindow: состояние занятости изменилось: " +
+              QString(busy ? "занят" : "свободен"));
 
+    // Обновляем состояние элементов управления
+    updateControlsState();
+    updateConnectionUI();
+
+    // Обновляем заголовок окна
+    updateWindowTitle();
+}
 

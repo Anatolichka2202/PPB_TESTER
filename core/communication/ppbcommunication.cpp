@@ -306,14 +306,44 @@ void PPBCommunication::processNextTask()
     executeCommand(task.cmd, task.address);
 }
 
+void PPBCommunication::setParseResult(bool success, const QString& message) {
+    LOG_DEBUG(QString("PPBCommunication::setParseResult: %1 - %2")
+                  .arg(success ? "УСПЕХ" : "ОШИБКА")
+                  .arg(message));
+
+    if (m_engine) {
+        // Передаем результат парсинга в движок
+        // Нужно будет добавить соответствующий метод в communicationengine
+        m_engine->setCommandParseResult(m_currentAddress, success, message);
+    } else {
+        LOG_WARNING("setParseResult: движок не инициализирован");
+    }
+}
+
+void PPBCommunication::setParseData(const QVariant& parsedData) {
+    LOG_DEBUG(QString("PPBCommunication::setParseData: тип данных: %1")
+                  .arg(parsedData.typeName()));
+
+    if (m_engine) {
+        // Передаем дополнительные данные парсинга в движок
+        m_engine->setCommandParseData(m_currentAddress, parsedData);
+    } else {
+        LOG_WARNING("setParseData: движок не инициализирован");
+    }
+}
+
 void PPBCommunication::stop()
 {
     LOG_INFO("PPBCommunication::stop() - остановка");
 
     // Останавливаем движок
     if (m_engine) {
-        // Можно добавить метод stop в communicationengine
-        disconnect();
+        m_engine->disconnect();
+    }
+
+    // Останавливаем таймер
+    if (m_taskTimer) {
+        m_taskTimer->stop();
     }
 
     // Очищаем очередь

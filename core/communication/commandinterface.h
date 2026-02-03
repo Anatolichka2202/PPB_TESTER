@@ -6,7 +6,7 @@
 #include <QString>
 #include <QByteArray>
 #include "ppbprotocol.h"
-
+#include <QVariant>
 enum class PPBState;
 struct DataPacket;
 struct PPBResponse;
@@ -28,10 +28,18 @@ public:
     virtual void sendDataPackets(const QVector<DataPacket>& packets) = 0;              //вектор
     virtual QVector<DataPacket> getGeneratedPackets() const = 0;                       //генерация
 
+    // Устанавливает результат парсинга (успех/ошибка + сообщение)
+    virtual void setParseResult(bool success, const QString& message) = 0;
+
+    // Устанавливает дополнительные распарсенные данные
+    virtual void setParseData(const QVariant& parsedData) = 0;
+
 signals:
     void statusDataReady(const QVector <QByteArray>& data);
     void testDataReady(const QVector<DataPacket>& data);
     void commandProgress(int current, int total);
+
+     void parsingComplete(bool success, const QString& message, const QVariant& data = QVariant()); //сигнал о завершение парсинга
 };
 
 #endif // COMMANDINTERFACE_H

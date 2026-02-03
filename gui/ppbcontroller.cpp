@@ -2,58 +2,121 @@
 #include "../core/logger.h"
 #include <QDebug>
 #include <QThread>
+
+
+void PPBController::connectCommunicationSignals()
+{
+    if (!m_communication) {
+        LOG_WARNING("PPBController: попытка подключить сигналы к нулевой коммуникации");
+        return;
+    }
+
+    LOG_DEBUG("PPBController: подключение сигналов к PPBCommunication");
+
+    // === СИГНАЛЫ ОТ КОММУНИКАЦИИ К КОНТРОЛЛЕРУ ===
+
+    // 1. Изменение состояния подключения
+    connect(m_communication, &PPBCommunication::stateChanged,
+            this, &PPBController::onConnectionStateChanged, Qt::QueuedConnection);
+
+    // 2. Завершение выполнения команды
+    connect(m_communication, &PPBCommunication::commandCompleted,
+            this, &PPBController::onCommandCompleted, Qt::QueuedConnection);
+
+    // 3. Прогресс выполнения команды
+    connect(m_communication, &PPBCommunication::commandProgress,
+            this, &PPBController::onCommandProgress, Qt::QueuedConnection);
+
+    // 4. Получение статуса от ППБ
+    connect(m_communication, &PPBCommunication::statusReceived,
+            this, &PPBController::onStatusReceived, Qt::QueuedConnection);
+
+    // 5. Ошибки при работе
+    connect(m_communication, &PPBCommunication::errorOccurred,
+            this, &PPBController::onErrorOccurred, Qt::QueuedConnection);
+
+    // 6. Сообщения для лога
+    connect(m_communication, &PPBCommunication::logMessage,
+            this, &PPBController::logMessage, Qt::QueuedConnection);
+
+    // 7. Сигналы подключения/отключения (специальные)
+    connect(m_communication, &PPBCommunication::connected,
+            this, [this]() {
+                LOG_DEBUG("PPBController: получен сигнал connected от коммуникации");
+                emit connectionStateChanged(PPBState::Ready);
+            }, Qt::QueuedConnection);
+
+    connect(m_communication, &PPBCommunication::disconnected,
+            this, [this]() {
+                LOG_DEBUG("PPBController: получен сигнал disconnected от коммуникации");
+                emit connectionStateChanged(PPBState::Idle);
+            }, Qt::QueuedConnection);
+
+    // 8. Изменение состояния занятости
+    connect(m_communication, &PPBCommunication::busyChange,
+            this, &PPBController::onBusyChanged, Qt::QueuedConnection);
+
+    // === СИГНАЛЫ ОТ КОНТРОЛЛЕРА К КОММУНИКАЦИИ ===
+
+    // 9. Запрос на выполнение команды
+    connect(this, &PPBController::executeCommandRequested,
+            m_communication, &PPBCommunication::executeCommand, Qt::QueuedConnection);
+
+    // 10. Подключение к ППБ
+    connect(this, &PPBController::connectToPPBSignal,
+            m_communication, &PPBCommunication::connectToPPB, Qt::QueuedConnection);
+
+    // 11. Отключение от ППБ
+    connect(this, &PPBController::disconnectSignal,
+            m_communication, &PPBCommunication::disconnect, Qt::QueuedConnection);
+
+    // 12. Команды ФУ (функционального управления)
+    connect(this, &PPBController::sendFUTransmitSignal,
+            m_communication, &PPBCommunication::sendFUTransmit, Qt::QueuedConnection);
+
+    connect(this, &PPBController::sendFUReceiveSignal,
+            m_communication, &PPBCommunication::sendFUReceive, Qt::QueuedConnection);
+
+    LOG_INFO("PPBController: все сигналы успешно подключены");
+}
+
 PPBController::PPBController(PPBCommunication* communication, QObject *parent)
     : QObject(parent)
     , m_communication(communication)
     , m_autoPollTimer(nullptr)
     , m_autoPollEnabled(false)
     , m_currentAddress(0)
+    , busy(false)  // Инициализируем busy
 {
+    LOG_DEBUG("PPBController: конструктор, thread=" +
+              QString::number((qulonglong)QThread::currentThreadId()));
+
     // Инициализируем таймер автоопроса
     m_autoPollTimer = new QTimer(this);
     m_autoPollTimer->setInterval(5000);
     connect(m_autoPollTimer, &QTimer::timeout, this, &PPBController::onAutoPollTimeout);
 
-     // Подключаем сигналы от переданной коммуникации
+    // Инициализируем карты состояний
+    m_channel1States.clear();
+    m_channel2States.clear();
+
+    // Подключаем сигналы от переданной коммуникации
     if (m_communication) {
-        // Сигналы от коммуникации к контроллеру
-        connect(m_communication, &PPBCommunication::stateChanged,
-                this, &PPBController::onConnectionStateChanged, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::commandCompleted,
-                this, &PPBController::onCommandCompleted, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::commandProgress,
-                this, &PPBController::onCommandProgress, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::statusReceived,
-                this, &PPBController::onStatusReceived, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::errorOccurred,
-                this, &PPBController::onErrorOccurred, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::logMessage,
-                this, &PPBController::logMessage, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::connected,
-                this, [this]() { emit connectionStateChanged(PPBState::Ready); }, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::disconnected,
-                this, [this]() { emit connectionStateChanged(PPBState::Idle); }, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::busyChange,
-                this, &PPBController::onBusyChanged, Qt::QueuedConnection);
+        connectCommunicationSignals();
 
-        // Сигналы от контроллера к коммуникации
-        connect(this, &PPBController::executeCommandRequested,
-                m_communication, &PPBCommunication::executeCommand, Qt::QueuedConnection);
-        connect(this, &PPBController::connectToPPBSignal,
-                m_communication, &PPBCommunication::connectToPPB, Qt::QueuedConnection);
-        connect(this, &PPBController::disconnectSignal,
-                m_communication, &PPBCommunication::disconnect, Qt::QueuedConnection);
-        connect(this, &PPBController::sendFUTransmitSignal,
-                m_communication, &PPBCommunication::sendFUTransmit, Qt::QueuedConnection);
-        connect(this, &PPBController::sendFUReceiveSignal,
-                m_communication, &PPBCommunication::sendFUReceive, Qt::QueuedConnection);
+        // Инициируем начальное состояние
+        PPBState initialState = m_communication->state();
+        LOG_DEBUG(QString("PPBController: начальное состояние коммуникации = %1")
+                      .arg(static_cast<int>(initialState)));
 
-        LOG_INFO("PPBController: все сигналы подключены");
+        emit connectionStateChanged(initialState);
+
+        LOG_INFO("PPBController: инициализация завершена");
     } else {
-        LOG_WARNING("PPBController: коммуникация не передана");
+        LOG_WARNING("PPBController: коммуникация не передана, состояние = Idle");
+        emit connectionStateChanged(PPBState::Idle);
     }
 }
-
 
 PPBController::~PPBController()
 {
@@ -85,11 +148,12 @@ void PPBController::connectToPPB(uint16_t address, const QString& ip, quint16 po
     LOG_INFO(QString("PPBController::connectToPPB: address=0x%1, ip=%2, port=%3")
                  .arg(address, 4, 16, QChar('0')).arg(ip).arg(port));
 
-    emit connectToPPBSignal( address, ip,  port);
-        emit logMessage(QString("Подключение к ППБ %1...").arg(address));
+    // Устанавливаем текущий адрес
+    setCurrentAddress(address);
 
+    emit connectToPPBSignal(address, ip, port);
+    emit logMessage(QString("Подключение к ППБ %1...").arg(address));
 }
-
 void PPBController::disconnect()
 {
     if (m_communication) {
@@ -100,12 +164,12 @@ void PPBController::disconnect()
 
 void PPBController::requestStatus(uint16_t address)
 {
+    // Устанавливаем текущий адрес для автоопроса
+    setCurrentAddress(address);
 
     emit executeCommandRequested(TechCommand::TS, address);
     emit logMessage(QString("Запрос статуса ППБ %1").arg(address));
-
 }
-
 void PPBController::resetPPB(uint16_t address)
 {
     emit executeCommandRequested(TechCommand::TC, address);
@@ -200,14 +264,22 @@ void PPBController::onStatusReceived(uint16_t address, const QVector<QByteArray>
 {
     // Проверяем, в каком потоке мы находимся
     if (QThread::currentThread() != this->thread()) {
-        // Если не в основном потоке, используем отложенный вызов
         QMetaObject::invokeMethod(this, "onStatusReceived",
                                   Qt::QueuedConnection,
                                   Q_ARG(uint16_t, address),
                                   Q_ARG(QVector<QByteArray>, data));
         return;
     }
+
+    // Устанавливаем текущий адрес (если еще не установлен)
+    if (m_currentAddress == 0) {
+        setCurrentAddress(address);
+    }
+
+    // Обрабатываем данные
     processStatusData(address, data);
+
+    // Сигнализируем о получении статуса
     emit statusReceived(address, data);
 }
 
@@ -395,52 +467,87 @@ void PPBController::requestBER_F(uint16_t address)
 //++++++++++++++++++++++++++++++++++++++
 void PPBController::setCommunication(PPBCommunication* communication)
 {
-    if (m_communication) {
-        disconnect();
-        m_communication->deleteLater();
+    LOG_DEBUG("PPBController::setCommunication: новый объект = " +
+              QString::number((qulonglong)communication) +
+              ", текущий = " + QString::number((qulonglong)m_communication));
+
+    // Если передается тот же объект - ничего не делаем
+    if (m_communication == communication) {
+        LOG_DEBUG("PPBController::setCommunication: тот же объект, игнорируем");
+        return;
     }
 
+    // ========== ОТКЛЮЧЕНИЕ СТАРОГО КОММУНИКАЦИОННОГО ОБЪЕКТА ==========
+    if (m_communication) {
+        LOG_DEBUG("PPBController::setCommunication: отключаем старый объект");
+
+        // 1. Останавливаем автоопрос, если он активен
+        if (m_autoPollTimer && m_autoPollTimer->isActive()) {
+            LOG_DEBUG("PPBController::setCommunication: останавливаем автоопрос");
+            m_autoPollTimer->stop();
+        }
+
+        // 2. ОТКЛЮЧАЕМ ВСЕ СИГНАЛЫ Qt МЕЖДУ контроллером и communication
+        QObject::disconnect(m_communication, nullptr, this, nullptr);
+        QObject::disconnect(this, nullptr, m_communication, nullptr);
+
+        // 3. Вызываем физическое отключение от ППБ (если нужно)
+        if (m_communication->state() == PPBState::Ready) {
+            LOG_DEBUG("PPBController::setCommunication: отключаемся от ППБ");
+            m_communication->disconnect();
+        }
+
+        // 4. Удаляем старый объект
+        LOG_DEBUG("PPBController::setCommunication: удаляем старый объект");
+        m_communication->deleteLater();
+        m_communication = nullptr;
+
+        // 5. Сбрасываем внутренние состояния
+        m_currentAddress = 0;
+        m_channel1States.clear();
+        m_channel2States.clear();
+
+        // 6. Уведомляем UI об отключении
+        emit connectionStateChanged(PPBState::Idle);
+        emit logMessage("Коммуникационный объект заменен");
+    }
+
+    // ========== УСТАНОВКА НОВОГО ОБЪЕКТА ==========
     m_communication = communication;
 
     if (m_communication) {
-        // Подключаем сигналы только если коммуникация существует
-        connect(m_communication, &PPBCommunication::stateChanged,
-                this, &PPBController::onConnectionStateChanged, Qt::QueuedConnection);
+        LOG_DEBUG("PPBController::setCommunication: настраиваем новый объект");
 
-        connect(m_communication, &PPBCommunication::stateChanged,
-                this, &PPBController::onConnectionStateChanged, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::commandCompleted,
-                this, &PPBController::onCommandCompleted, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::commandProgress,
-                this, &PPBController::onCommandProgress, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::statusReceived,
-                this, &PPBController::onStatusReceived, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::errorOccurred,
-                this, &PPBController::onErrorOccurred, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::logMessage,
-                this, &PPBController::logMessage, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::connected,
-                this, [this]() { emit connectionStateChanged(PPBState::Ready); }, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::disconnected,
-                this, [this]() { emit connectionStateChanged(PPBState::Idle); }, Qt::QueuedConnection);
-        connect(m_communication, &PPBCommunication::busyChange,  // НОВОЕ
-                this, &PPBController::onBusyChanged, Qt::QueuedConnection);
+        // 1. Подключаем сигналы (используем метод из ШАГА 1)
+        connectCommunicationSignals();
 
-        // Подключаем сигналы PPBController -> PPBCommunication
-        connect(this, &PPBController::executeCommandRequested,
-                m_communication, &PPBCommunication::executeCommand, Qt::QueuedConnection);
-        connect(this, &PPBController::connectToPPBSignal,
-                m_communication, &PPBCommunication::connectToPPB, Qt::QueuedConnection);
-        connect(this, &PPBController::disconnectSignal,
-                m_communication, &PPBCommunication::disconnect, Qt::QueuedConnection);
-        connect(this, &PPBController::sendFUTransmitSignal,
-                m_communication, &PPBCommunication::sendFUTransmit, Qt::QueuedConnection);
-        connect(this, &PPBController::sendFUReceiveSignal,
-                m_communication, &PPBCommunication::sendFUReceive, Qt::QueuedConnection);
+        // 2. Проверяем текущее состояние нового communication
+        PPBState newState = m_communication->state();
+        LOG_DEBUG(QString("PPBController::setCommunication: состояние нового объекта = %1")
+                      .arg(static_cast<int>(newState)));
 
+        // 3. Уведомляем UI о текущем состоянии
+        emit connectionStateChanged(newState);
 
+        // 4. Если автоопрос был включен - перезапускаем
+        if (m_autoPollEnabled && m_autoPollTimer) {
+            LOG_DEBUG("PPBController::setCommunication: перезапускаем автоопрос");
+            m_autoPollTimer->start();
+        }
 
-
-        LOG_INFO("PPBCommunication перемещен в отдельный поток");
+        LOG_INFO("PPBController: коммуникационный объект успешно заменен");
+        emit logMessage("Новый коммуникационный объект установлен");
+    } else {
+        LOG_WARNING("PPBController::setCommunication: передан nullptr");
+        emit logMessage("Коммуникационный объект удален");
+    }
+}
+void PPBController::setCurrentAddress(uint16_t address)
+{
+    if (m_currentAddress != address) {
+        LOG_DEBUG(QString("PPBController: изменение текущего адреса: 0x%1 -> 0x%2")
+                      .arg(m_currentAddress, 4, 16, QChar('0'))
+                      .arg(address, 4, 16, QChar('0')));
+        m_currentAddress = address;
     }
 }

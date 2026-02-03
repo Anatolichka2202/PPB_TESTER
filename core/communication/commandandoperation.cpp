@@ -65,83 +65,243 @@ QString CommandFactory::commandName(TechCommand cmd) {
 }
 
 // TS
+
+bool StatusCommand::parseResponseData(const QVector<QByteArray>& data,
+                                      QString& outMessage,
+                                      QVariant& outParsedData) const {
+    outMessage = "Статус получен";
+
+    // Сохраняем сырые данные для дальнейшего парсинга в UI
+    QVariantList packetsList;
+    for (const auto& packet : data) {
+        packetsList.append(packet);
+    }
+    outParsedData = packetsList;
+
+    return true;
+}
+
 void StatusCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
         LOG_WARNING("StatusCommand::onDataReceived: comm is nullptr!");
         return;
     }
+
+    // Сначала парсим данные
+    QString message;
+    QVariant parsedData;
+    if (parseResponseData(data, message, parsedData)) {
+        // Устанавливаем результат парсинга
+        comm->setParseResult(true, message);
+        comm->setParseData(parsedData);
+    } else {
+        comm->setParseResult(false, "Ошибка парсинга статуса");
+    }
+
+    // Отправляем сырые данные для UI
     emit comm->statusDataReady(data);
-    comm->completeCurrentOperation(true, "Статус получен");
 }
 
 // VERS
+bool VersCommand::parseResponseData(const QVector<QByteArray>& data,
+                                    QString& outMessage,
+                                    QVariant& outParsedData) const {
+    if (data.size() < 2) {
+        outMessage = "Ошибка: получено меньше 2 пакетов";
+        return false;
+    }
+
+    uint32_t crc = parseTwoPackets(data);
+    outMessage = QString("Версия ПО. CRC32: 0x%1").arg(crc, 8, 16, QChar('0'));
+
+    QVariantMap extraData;
+    extraData["crc32"] = crc;
+    extraData["rawPackets"] = data.size();
+    outParsedData = extraData;
+
+    return true;
+}
+
 void VersCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
         LOG_WARNING("VersCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
-    // Парсим 2 пакета = 4 байта CRC32
-    uint32_t crc = parseTwoPackets(data);
+    // 1. Проверяем количество пакетов
+    if (data.size() != expectedResponsePackets()) {
+        // Частичные данные - устанавливаем соответствующий результат
+        QString message = QString("Получено %1 из %2 пакетов")
+                              .arg(data.size())
+                              .arg(expectedResponsePackets());
 
-    // Формируем сообщение для UI
-    QString message = QString("Версия ПО. CRC32: 0x%1").arg(crc, 8, 16, QChar('0'));
+        // Можно сохранить то, что получили для анализа
+        QVariantMap extraData;
+        extraData["received"] = data.size();
+        extraData["expected"] = expectedResponsePackets();
+        extraData["partial"] = true;
 
-    // Отправляем сигнал с сырыми данными для дальнейшего парсинга
+        comm->setParseResult(false, message);
+        comm->setParseData(extraData);
+        return;
+    }
+
+    // Парсим данные
+    QString message;
+    QVariant parsedData;
+    if (parseResponseData(data, message, parsedData)) {
+        comm->setParseResult(true, message);
+        comm->setParseData(parsedData);
+    } else {
+        comm->setParseResult(false, message);
+    }
+
+    // Отправляем сырые данные для UI (если нужно)
     emit comm->statusDataReady(data);
-
-    // Завершаем операцию
-    comm->completeCurrentOperation(true, message);
 }
 
 // CHECKSUM
+bool CheckSumCommand::parseResponseData(const QVector<QByteArray>& data,
+                                        QString& outMessage,
+                                        QVariant& outParsedData) const {
+    if (data.size() < 2) {
+        outMessage = "Ошибка: получено меньше 2 пакетов";
+        return false;
+    }
+
+    uint32_t checksum = parseTwoPackets(data);
+    outMessage = QString("Контрольная сумма VOLUME: 0x%1").arg(checksum, 8, 16, QChar('0'));
+
+    QVariantMap extraData;
+    extraData["checksum"] = checksum;
+    outParsedData = extraData;
+
+    return true;
+}
+
 void CheckSumCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
         LOG_WARNING("CheckSumCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
-    uint32_t checksum = parseTwoPackets(data);
-    QString message = QString("Контрольная сумма VOLUME: 0x%1").arg(checksum, 8, 16, QChar('0'));
-    comm->completeCurrentOperation(true, message);
+    QString message;
+    QVariant parsedData;
+    if (parseResponseData(data, message, parsedData)) {
+        comm->setParseResult(true, message);
+        comm->setParseData(parsedData);
+    } else {
+        comm->setParseResult(false, message);
+    }
 }
 
 // DROP
+bool DROPCommand::parseResponseData(const QVector<QByteArray>& data,
+                                    QString& outMessage,
+                                    QVariant& outParsedData) const {
+    if (data.size() < 2) {
+        outMessage = "Ошибка: получено меньше 2 пакетов";
+        return false;
+    }
+
+    uint32_t dropped = parseTwoPackets(data);
+    outMessage = QString("Отброшенных пакетов ФУ: %1").arg(dropped);
+
+    QVariantMap extraData;
+    extraData["dropped"] = dropped;
+    outParsedData = extraData;
+
+    return true;
+}
+
 void DROPCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
         LOG_WARNING("DROPCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
-    uint32_t dropped = parseTwoPackets(data);
-    QString message = QString("Отброшенных пакетов ФУ: %1").arg(dropped);
-    comm->completeCurrentOperation(true, message);
+    QString message;
+    QVariant parsedData;
+    if (parseResponseData(data, message, parsedData)) {
+        comm->setParseResult(true, message);
+        comm->setParseData(parsedData);
+    } else {
+        comm->setParseResult(false, message);
+    }
 }
 
-// BER_T
+// ===== BER_TCommand =====
+bool BER_TCommand::parseResponseData(const QVector<QByteArray>& data,
+                                     QString& outMessage,
+                                     QVariant& outParsedData) const {
+    if (data.size() < 2) {
+        outMessage = "Ошибка: получено меньше 2 пакетов";
+        return false;
+    }
+
+    uint32_t errors = parseTwoPackets(data);
+    float ber = errors / 1000000.0f;
+    outMessage = QString("Коэффициент ошибок ТУ: %1 (ошибок: %2)").arg(ber, 0, 'f', 6).arg(errors);
+
+    QVariantMap extraData;
+    extraData["errors"] = errors;
+    extraData["ber"] = ber;
+    outParsedData = extraData;
+
+    return true;
+}
+
 void BER_TCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
         LOG_WARNING("BER_TCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
-    uint32_t errors = parseTwoPackets(data);
-    float ber = errors / 1000000.0f; // Пример расчета BER
-    QString message = QString("Коэффициент ошибок ТУ: %1 (ошибок: %2)").arg(ber, 0, 'f', 6).arg(errors);
-    comm->completeCurrentOperation(true, message);
+    QString message;
+    QVariant parsedData;
+    if (parseResponseData(data, message, parsedData)) {
+        comm->setParseResult(true, message);
+        comm->setParseData(parsedData);
+    } else {
+        comm->setParseResult(false, message);
+    }
 }
 
-// BER_F
+// ===== BER_FCommand =====
+bool BER_FCommand::parseResponseData(const QVector<QByteArray>& data,
+                                     QString& outMessage,
+                                     QVariant& outParsedData) const {
+    if (data.size() < 2) {
+        outMessage = "Ошибка: получено меньше 2 пакетов";
+        return false;
+    }
+
+    uint32_t errors = parseTwoPackets(data);
+    float ber = errors / 1000000.0f;
+    outMessage = QString("Коэффициент ошибок ФУ: %1 (ошибок: %2)").arg(ber, 0, 'f', 6).arg(errors);
+
+    QVariantMap extraData;
+    extraData["errors"] = errors;
+    extraData["ber"] = ber;
+    outParsedData = extraData;
+
+    return true;
+}
+
 void BER_FCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
         LOG_WARNING("BER_FCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
-    uint32_t errors = parseTwoPackets(data);
-    float ber = errors / 1000000.0f;
-    QString message = QString("Коэффициент ошибок ФУ: %1 (ошибок: %2)").arg(ber, 0, 'f', 6).arg(errors);
-    comm->completeCurrentOperation(true, message);
+    QString message;
+    QVariant parsedData;
+    if (parseResponseData(data, message, parsedData)) {
+        comm->setParseResult(true, message);
+        comm->setParseData(parsedData);
+    } else {
+        comm->setParseResult(false, message);
+    }
 }
 
 // PRBS_M2S
@@ -176,40 +336,79 @@ void PRBS_M2SCommand::onOkReceived(CommandInterface* comm, uint16_t address) con
     comm->sendDataPackets(testPackets);
 }
 
-// PRBS_S2M
+// ===== PRBS_S2MCommand =====
+bool PRBS_S2MCommand::parseResponseData(const QVector<QByteArray>& data,
+                                        QString& outMessage,
+                                        QVariant& outParsedData) const
+{
+    // Простая проверка количества
+    if (data.size() != expectedResponsePackets()) {
+        outMessage = QString("Неверное количество пакетов: %1 (ожидалось %2)")
+                         .arg(data.size())
+                         .arg(expectedResponsePackets());
+        return false;
+    }
+
+    outMessage = QString("Получено %1 пакетов тестовой последовательности").arg(data.size());
+
+    QVariantMap extraData;
+    extraData["packetCount"] = data.size();
+    outParsedData = extraData;
+
+    return true;
+}
+
 void PRBS_S2MCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const
 {
     if (!comm) {
-        LOG_WARNING("StatusCommand::onDataReceived: comm is nullptr!");
+        LOG_WARNING("PRBS_S2MCommand::onDataReceived: comm is nullptr!");
         return;
     }
-    // Парсим полученные пакеты
+
+    // 1. Парсим полученные пакеты
     QVector<DataPacket> receivedPackets;
+    int parseErrors = 0;
+
     for (const auto& packetData : data) {
         DataPacket packet;
         if (PacketBuilder::parseDataPacket(packetData, packet)) {
             receivedPackets.append(packet);
+        } else {
+            parseErrors++;
+            LOG_WARNING(QString("Ошибка парсинга пакета %1").arg(receivedPackets.size() + parseErrors));
         }
     }
 
-    // Получаем отправленные пакеты (из PRBS_M2S)
-    QVector<DataPacket> sentPackets = comm->getGeneratedPackets();
-
-    if (sentPackets.isEmpty()) {
-        comm->completeCurrentOperation(false,
-                                       "Нет данных для сравнения. Сначала выполните PRBS_M2S.");
+    // 2. Проверяем, получили ли мы все пакеты
+    if (receivedPackets.size() != PPBConstants::TEST_PACKET_COUNT) {
+        QString error = QString("Получено %1 из %2 пакетов (ошибок парсинга: %3)")
+                            .arg(receivedPackets.size())
+                            .arg(PPBConstants::TEST_PACKET_COUNT)
+                            .arg(parseErrors);
+        comm->setParseResult(false, error);
         return;
     }
 
-    // Сравниваем
-    TestSequenceComparator::Result result =
-        TestSequenceComparator::compare(sentPackets, receivedPackets);
+    // 3. Формируем сообщение об успехе
+    QString message = QString("Получено %1 тестовых пакетов").arg(receivedPackets.size());
 
-    // Формируем отчёт
-    QString report = TestSequenceComparator::generateReport(result);
+    // 4. Сохраняем полученные пакеты для последующего сравнения
+    QVariantMap extraData;
 
-    // Завершаем операцию
-    comm->completeCurrentOperation(result.isPerfectMatch, report);
+    // Сохраняем количество пакетов
+    extraData["packetCount"] = receivedPackets.size();
+    extraData["parseErrors"] = parseErrors;
+
+    // Если нужно сохранить сами пакеты, можно сделать так:
+    // extraData["receivedPackets"] = QVariant::fromValue(receivedPackets);
+    // Но для этого нужно зарегистрировать тип DataPacket как метатип
+
+    // 5. Устанавливаем результат парсинга
+    comm->setParseResult(true, message);
+    comm->setParseData(extraData);
+
+    // 6. Дополнительно: эмитим сигнал с полученными пакетами
+    // emit comm->testDataReady(receivedPackets); - если нужно для UI
 }
 
 // VOLUME
@@ -220,7 +419,7 @@ void VolumeCommand::onOkReceived(CommandInterface* comm, uint16_t address) const
     }
 
     // После получения OK нужно начать отправку ПО
-    // В реальности здесь нужно загрузить файл ПО и разбить на 256 пакетов
+    // В реальности здесь нужно загрузить файл ПО и разбить н
     QVector<DataPacket> programPackets;
 
     // TODO: Загрузить реальный файл ПО
@@ -240,5 +439,6 @@ void VolumeCommand::onOkReceived(CommandInterface* comm, uint16_t address) const
 
     // Отправляем пакеты ПО
     comm->sendDataPackets(programPackets);
-    comm->completeCurrentOperation(true, "Начата отправка ПО (256 пакетов)");
+    //comm->completeCurrentOperation(true, "Начата отправка ПО (256 пакетов)");
 }
+

@@ -40,6 +40,7 @@ public:
     // Автоопрос
    Q_INVOKABLE  void startAutoPoll(int intervalMs = 5000);
    Q_INVOKABLE  void stopAutoPoll();
+   Q_INVOKABLE void setCurrentAddress(uint16_t address);
 
     // Геттеры состояния
    Q_INVOKABLE  PPBState connectionState() const;
@@ -91,6 +92,7 @@ private:
     UIChannelState parseChannelData(const QVector<QByteArray>& channelData);
     QString commandToName(TechCommand command) const;
 
+     void connectCommunicationSignals();
     //PPBCommunication* m_communication;
     QTimer* m_autoPollTimer;
     bool m_autoPollEnabled;
@@ -103,6 +105,8 @@ private:
     uint16_t m_currentAddress;
 
     bool busy=false;
+
+
 };
 
 #endif // PPBCONTROLLER_H

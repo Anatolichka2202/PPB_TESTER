@@ -54,6 +54,8 @@ private slots:
     void onOperationProgress(int current, int total, const QString& operation);
     void onOperationCompleted(bool success, const QString& message);
 
+    void onControllerBusyChanged(bool busy);
+
 private:
     void initializeUI();
     void connectSignals();

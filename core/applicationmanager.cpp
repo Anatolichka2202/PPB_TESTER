@@ -227,7 +227,8 @@ void ApplicationManager::initializeMainWindow()
 
     // Создаем главное окно в основном потоке
     m_mainWindow = std::make_unique<TesterWindow>(m_controller.get());
-
+    // Устанавливаем иконку (если нужно)
+    m_mainWindow->setWindowIcon(QIcon("../bagger.png"));
     LOG_INFO("[APPLICATION] Главное окно создано");
 }
 
@@ -258,25 +259,11 @@ void ApplicationManager::shutdown()
     if (m_communication) {
         LOG_INFO("[APPLICATION] Остановка PPBCommunication...");
 
-        // Вызываем stop() в потоке объекта
-        QEventLoop stopLoop;
-        QTimer timeoutTimer;
-        timeoutTimer.setSingleShot(true);
+        // Вызываем stop() без аргументов
+        QMetaObject::invokeMethod(m_communication.get(), "stop", Qt::QueuedConnection);
 
-        bool stopSuccess = false;
-
-        // Подключаем сигнал завершения (если есть) или используем таймаут
-        QObject::connect(&timeoutTimer, &QTimer::timeout, &stopLoop, [&]() {
-            stopLoop.quit();
-        });
-
-        // Вызываем stop в потоке объекта
-        QMetaObject::invokeMethod(m_communication.get(), "stop", Qt::QueuedConnection,
-                                  Q_ARG(bool, true));
-
-        // Ждем завершения с таймаутом
-        timeoutTimer.start(2000); // 2 секунды
-        stopLoop.exec();
+        // Даем время на остановку
+        QThread::msleep(100);
 
         m_communication.reset();
     }
@@ -293,7 +280,7 @@ void ApplicationManager::shutdown()
 
         m_communicationThread->quit();
 
-        if (!m_communicationThread->wait(3000)) { // Ждем 3 секунды
+        if (!m_communicationThread->wait(1000)) { // Ждем 1 секунду
             LOG_WARNING("[APPLICATION] Принудительное завершение коммуникационного потока...");
             m_communicationThread->terminate();
             m_communicationThread->wait();
@@ -340,3 +327,4 @@ void ApplicationManager::cleanup()
         LOG_ERROR("[APPLICATION] Неизвестная ошибка при очистке ресурсов");
     }
 }
+

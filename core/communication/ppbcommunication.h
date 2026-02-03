@@ -54,6 +54,9 @@ public:
     void completeCurrentOperation(bool success, const QString& message = "") override;
     void sendPacket(const QByteArray& packet, const QString& description) override;
 
+
+    void setParseResult(bool success, const QString& message) override;
+    void setParseData(const QVariant& parsedData) override;
 public slots:
     // Инициализация (должна вызываться в потоке объекта)
     void initialize(UDPClient* udpClient);
@@ -82,6 +85,10 @@ signals:
 
     // Сигналы ошибок
     void errorOccurred(const QString& error);
+
+    //сигнал для распарсенных данных
+    void commandDataParsed(uint16_t address, const QVariant& data, TechCommand command);
+
 
     // Сигналы для логов
     void logMessage(const QString& message);

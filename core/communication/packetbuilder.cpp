@@ -109,8 +109,7 @@ bool PacketBuilder::parseBridgeResponse(const QByteArray& data, BridgeResponse& 
 }
 
 
-bool PacketBuilder::parseDataPacket(const QByteArray& data, DataPacket& packet)
-{
+bool PacketBuilder::parseDataPacket(const QByteArray& data, DataPacket& packet) {
     if (data.size() != static_cast<int>(sizeof(DataPacket))) {
         qDebug() << "Неверный размер пакета данных:" << data.size()
                  << "ожидается:" << sizeof(DataPacket);
@@ -118,9 +117,19 @@ bool PacketBuilder::parseDataPacket(const QByteArray& data, DataPacket& packet)
     }
 
     memcpy(&packet, data.constData(), sizeof(DataPacket));
+
+    // Проверяем CRC
+    uint8_t dataForCRC[3] = {packet.data[0], packet.data[1], packet.counter};
+    uint8_t calculatedCrc = calculateCRC8(dataForCRC, 3);
+
+    if (calculatedCrc != packet.crc) {
+        qDebug() << "Ошибка CRC в пакете данных: рассчитано" << calculatedCrc
+                 << "получено" << packet.crc;
+        return false;
+    }
+
     return true;
 }
-
 bool PacketBuilder::checkDataPacketCRC(const DataPacket& packet)
 {
     uint8_t dataForCRC[3] = {packet.data[0], packet.data[1], packet.counter};

@@ -3,7 +3,8 @@
 
 #include <QWidget>
 #include "ppbcontroller.h"
-
+#include <QMessageBox>
+#include <QLabel>
 namespace Ui {
 class pult;
 }
@@ -29,11 +30,15 @@ private slots:
     void on_DropCommand_clicked();
     void on_BER_TCommand_clicked();
     void on_BER_FCommand_clicked();
+    void onControllerLogMessage(const QString& message);
+    void onControllerErrorOccurred(const QString& error);
+    void onControllerOperationCompleted(bool success, const QString& message);
 
 private:
     Ui::pult *ui;
     PPBController* m_controller;
     uint16_t m_address;
+    QTimer* m_statusTimer;
 };
 
 #endif // PULT_H

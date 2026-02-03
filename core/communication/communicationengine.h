@@ -8,13 +8,13 @@
 #include <deque>
 #include <list>
 #include <memory>
-
+#include <QVariant>
 #include "udpclient.h"
 #include "packetbuilder.h"
 #include "commandandoperation.h"
 
 namespace Internal {
-class StateManager : public QObject {
+class StateManager : public QObject {       //управляет состоянием для каждого адреса
     Q_OBJECT
 
 
@@ -23,6 +23,7 @@ public:
     explicit StateManager(QObject* parent = nullptr);
     PPBState getState(uint16_t address) const;
     void setState(uint16_t address, PPBState state);
+
 
     void clear();
 
@@ -39,7 +40,7 @@ private:
     QMap<uint16_t, PPBState> m_states;
 };
 
-class CommandQueue : public QObject {
+class CommandQueue : public QObject {           // управляет очередями комад для каждого адреса
     Q_OBJECT
 public:
     explicit CommandQueue(QObject* parent = nullptr);
@@ -49,6 +50,8 @@ public:
     std::unique_ptr<PPBCommand> dequeue(uint16_t address);
     bool isEmpty(uint16_t address) const;
     void clear();
+
+
 
     // Получить список всех адресов, для которых есть очереди
     QList<uint16_t> addresses() const;
@@ -63,7 +66,7 @@ private:
     std::unordered_map<uint16_t, std::deque<std::unique_ptr<PPBCommand>>> m_queues;
 };
 
-} // namespace Internal
+} // namespace Internal, хранение и управление очередями и состояниями по каждому адресу, используется движком
 
 class communicationengine : public QObject
 {
@@ -79,7 +82,14 @@ private:
         int packetsExpected = 0;
         int packetsReceived = 0;
         bool waitingForOk = false;
+        bool operationCompleted = false;
         QTimer* operationTimer = nullptr;
+        //результаты парсинга от командды
+
+        QString parsedMessage;           // Сообщение от команды
+        bool parsedSuccess = false;      // Успешен ли парсинг
+        QVariant parsedData;             // Дополнительные распарсенные данные
+        QVector<DataPacket> parsedPackets; // Для команд с пакетами (PRBS_S2M)
 
         // Конструкторы и операторы
         PPBContext() = default;
@@ -123,6 +133,14 @@ private:
                 delete operationTimer;
             }
         }
+
+        // Метод для сброса результатов парсинга
+        void clearParseResults() {
+            parsedMessage.clear();
+            parsedSuccess = false;
+            parsedData.clear();
+            parsedPackets.clear();
+        }
     };
 
 public:
@@ -134,6 +152,7 @@ public:
     void disconnect();
     void executeCommand(TechCommand cmd, uint16_t address);
 
+
     // ФУ команды
     void sendFUTransmit(uint16_t address);
     void sendFUReceive(uint16_t address, uint8_t period, const uint8_t fuData[3] = nullptr);
@@ -143,6 +162,10 @@ public:
         m_commandInterface = cmdInterface;
     }
     void sendPacketInternal(const QByteArray& packet, const QString& description);
+
+    void setCommandParseResult(uint16_t address, bool success, const QString& message);
+    void setCommandParseData(uint16_t address, const QVariant& data);
+
 public slots:
    // void forceCompleteOperation(bool success, const QString& message);
 signals:
@@ -150,12 +173,15 @@ signals:
     void connected();
     void disconnected();
     void commandCompleted(bool success, const QString& report, TechCommand command);
+
     void errorOccurred(const QString& error);
     void logMessage(const QString& message);
 
     void statusDataReady(const QVector<QByteArray>& data);
     void testDataReady(const QVector<DataPacket>& data);
     void commandProgress(int current, int total);
+
+    void commandDataParsed(uint16_t address, const QVariant& data, TechCommand command);
 
 private slots:
     void onDataReceived(const QByteArray& data, const QHostAddress& sender, quint16 port);
@@ -170,6 +196,14 @@ private:
     void processDataPacket(const DataPacket& packet);
     void clearContext(uint16_t address);
     PPBContext* getContext(uint16_t address);
+
+    //машина состояний
+    void transitionState(uint16_t addres, PPBState newState, const QString& reason); //явная смена состояния
+    void completeOperation(uint16_t address, bool success, const QString& message);  // Универсальное завершение операции (успешное или с ошибкой)
+    QString stateToString(PPBState state) const;// Вспомогательная функция для логирования состояний
+    void processNextCommandForAddress(uint16_t address); // Обработка следующей команды для указанного адреса
+
+    bool canExecuteCommand(uint16_t address, const PPBCommand* command) const;
 private:
 
     UDPClient* m_udpClient;
@@ -187,6 +221,10 @@ private:
     Internal::StateManager* m_stateManager;
     Internal::CommandQueue* m_commandQueue;
     CommandInterface* m_commandInterface;
+
+    uint16_t m_activeDataAddress = 0;  // Какой ППБ сейчас отправляет данные
+    bool m_waitingForData = false;     // Ожидаем ли данные вообще
+    mutable QMutex m_activeDataMutex;              // Мьютекс для защиты глобальных переменных
 
 
 };
