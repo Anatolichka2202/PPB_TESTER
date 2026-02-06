@@ -3,7 +3,7 @@
 
 #include "udpclient.h"
 #include "packetbuilder.h"
-#include "../logger.h"
+#include "../logwrapper.h"
 #include <QObject>
 #include <QTimer>
 #include "commandinterface.h"
@@ -91,7 +91,7 @@ signals:
 
 
     // Сигналы для логов
-    void logMessage(const QString& message);
+    //void logMessage(const QString& message);
 
     // Сигнал завершения инициализации
     void initialized();

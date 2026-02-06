@@ -91,6 +91,8 @@ private:
         QVariant parsedData;             // Дополнительные распарсенные данные
         QVector<DataPacket> parsedPackets; // Для команд с пакетами (PRBS_S2M)
 
+         PPBState stateBeforeCommand = PPBState::Idle;  // Состояние перед началом команды
+
         // Конструкторы и операторы
         PPBContext() = default;
         PPBContext(const PPBContext&) = delete;
@@ -175,7 +177,7 @@ signals:
     void commandCompleted(bool success, const QString& report, TechCommand command);
 
     void errorOccurred(const QString& error);
-    void logMessage(const QString& message);
+   // void logMessage(const QString& message);
 
     void statusDataReady(const QVector<QByteArray>& data);
     void testDataReady(const QVector<DataPacket>& data);

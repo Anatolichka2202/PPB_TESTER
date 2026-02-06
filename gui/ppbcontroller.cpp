@@ -2,16 +2,16 @@
 #include "../core/logger.h"
 #include <QDebug>
 #include <QThread>
-
+#include "../core/logwrapper.h"
 
 void PPBController::connectCommunicationSignals()
 {
     if (!m_communication) {
-        LOG_WARNING("PPBController: попытка подключить сигналы к нулевой коммуникации");
+       LOG_CONTROLLER_WARNING("попытка подключить сигналы к нулевой коммуникации");
         return;
     }
 
-    LOG_DEBUG("PPBController: подключение сигналов к PPBCommunication");
+    LOG_CONTROLLER_DEBUG("PPBController: подключение сигналов к PPBCommunication");
 
     // === СИГНАЛЫ ОТ КОММУНИКАЦИИ К КОНТРОЛЛЕРУ ===
 
@@ -35,20 +35,20 @@ void PPBController::connectCommunicationSignals()
     connect(m_communication, &PPBCommunication::errorOccurred,
             this, &PPBController::onErrorOccurred, Qt::QueuedConnection);
 
-    // 6. Сообщения для лога
+    /*/ 6. Сообщения для лога
     connect(m_communication, &PPBCommunication::logMessage,
-            this, &PPBController::logMessage, Qt::QueuedConnection);
+            this, &PPBController::logMessage, Qt::QueuedConnection); */
 
     // 7. Сигналы подключения/отключения (специальные)
     connect(m_communication, &PPBCommunication::connected,
             this, [this]() {
-                LOG_DEBUG("PPBController: получен сигнал connected от коммуникации");
+                LOG_CONTROLLER_DEBUG("PPBController: получен сигнал connected от коммуникации");
                 emit connectionStateChanged(PPBState::Ready);
             }, Qt::QueuedConnection);
 
     connect(m_communication, &PPBCommunication::disconnected,
             this, [this]() {
-                LOG_DEBUG("PPBController: получен сигнал disconnected от коммуникации");
+                LOG_CONTROLLER_DEBUG("PPBController: получен сигнал disconnected от коммуникации");
                 emit connectionStateChanged(PPBState::Idle);
             }, Qt::QueuedConnection);
 
@@ -77,7 +77,7 @@ void PPBController::connectCommunicationSignals()
     connect(this, &PPBController::sendFUReceiveSignal,
             m_communication, &PPBCommunication::sendFUReceive, Qt::QueuedConnection);
 
-    LOG_INFO("PPBController: все сигналы успешно подключены");
+    LOG_CONTROLLER_INFO("PPBController: все сигналы успешно подключены");
 }
 
 PPBController::PPBController(PPBCommunication* communication, QObject *parent)
@@ -88,7 +88,7 @@ PPBController::PPBController(PPBCommunication* communication, QObject *parent)
     , m_currentAddress(0)
     , busy(false)  // Инициализируем busy
 {
-    LOG_DEBUG("PPBController: конструктор, thread=" +
+    LOG_CONTROLLER_DEBUG("PPBController: конструктор, thread=" +
               QString::number((qulonglong)QThread::currentThreadId()));
 
     // Инициализируем таймер автоопроса
@@ -106,14 +106,14 @@ PPBController::PPBController(PPBCommunication* communication, QObject *parent)
 
         // Инициируем начальное состояние
         PPBState initialState = m_communication->state();
-        LOG_DEBUG(QString("PPBController: начальное состояние коммуникации = %1")
+        LOG_CONTROLLER_DEBUG(QString("начальное состояние коммуникации = %1")
                       .arg(static_cast<int>(initialState)));
 
         emit connectionStateChanged(initialState);
 
-        LOG_INFO("PPBController: инициализация завершена");
+        LOG_CONTROLLER_INFO("инициализация завершена");
     } else {
-        LOG_WARNING("PPBController: коммуникация не передана, состояние = Idle");
+        LOG_CONTROLLER_WARNING("коммуникация не передана, состояние = Idle");
         emit connectionStateChanged(PPBState::Idle);
     }
 }
@@ -135,30 +135,30 @@ void PPBController::onBusyChanged(bool busy)
 
     // Логируем для отладки
     if (busy) {
-        LOG_INFO("PPBCommunication занят выполнением команды");
-        emit logMessage("Система занята выполнением команды...");
+        LOG_CONTROLLER_INFO("PPBCommunication занят выполнением команды");
+
     } else {
-        LOG_INFO("PPBCommunication свободен");
-        emit logMessage("Система готова к новым командам");
+        LOG_CONTROLLER_INFO("PPBCommunication свободен");
+        LOG_CONTROLLER_INFO( "Система готова к новым командам");
     }
 
 }
 void PPBController::connectToPPB(uint16_t address, const QString& ip, quint16 port)
 {
-    LOG_INFO(QString("PPBController::connectToPPB: address=0x%1, ip=%2, port=%3")
+    LOG_CONTROLLER_INFO(QString("PPBController::connectToPPB: address=0x%1, ip=%2, port=%3")
                  .arg(address, 4, 16, QChar('0')).arg(ip).arg(port));
 
     // Устанавливаем текущий адрес
     setCurrentAddress(address);
 
     emit connectToPPBSignal(address, ip, port);
-    emit logMessage(QString("Подключение к ППБ %1...").arg(address));
+    LOG_CONTROLLER_INFO(QString("Подключение к ППБ %1...").arg(address));
 }
 void PPBController::disconnect()
 {
     if (m_communication) {
         m_communication->disconnect();
-        emit logMessage("Отключение от ППБ...");
+        LOG_CONTROLLER_INFO("Отключение от ППБ...");
     }
 }
 
@@ -168,19 +168,19 @@ void PPBController::requestStatus(uint16_t address)
     setCurrentAddress(address);
 
     emit executeCommandRequested(TechCommand::TS, address);
-    emit logMessage(QString("Запрос статуса ППБ %1").arg(address));
+    LOG_CONTROLLER_INFO(QString("Запрос статуса ППБ %1").arg(address));
 }
 void PPBController::resetPPB(uint16_t address)
 {
     emit executeCommandRequested(TechCommand::TC, address);
-        emit logMessage(QString("Сброс ППБ %1").arg(address));
+        LOG_CONTROLLER_INFO(QString("Сброс ППБ %1").arg(address));
 
 }
 
 void PPBController::setGeneratorParameters(uint16_t address, uint32_t duration, uint8_t duty, uint32_t delay)
 {
     // TODO: Реализовать через ФУ
-    emit logMessage(QString("Параметры генератора для ППБ %1: Длительность=%2, Скважность=%3, Задержка=%4")
+    LOG_CONTROLLER_INFO( QString("Параметры генератора для ППБ %1: Длительность=%2, Скважность=%3, Задержка=%4")
                         .arg(address).arg(duration).arg(duty).arg(delay));
 }
 
@@ -188,7 +188,7 @@ void PPBController::setFUReceive(uint16_t address, uint8_t period)
 {
     if (m_communication && !m_communication->isBusy()) {
         m_communication->sendFUReceive(address, period);
-        emit logMessage(QString("Режим ФУ прием для ППБ %1").arg(address));
+        LOG_CONTROLLER_INFO(QString("Режим ФУ прием для ППБ %1").arg(address));
     }
 }
 
@@ -196,21 +196,21 @@ void PPBController::setFUTransmit(uint16_t address)
 {
     if (m_communication && !m_communication->isBusy()) {
         m_communication->sendFUTransmit(address);
-        emit logMessage(QString("Режим ФУ передача для ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Режим ФУ передача для ППБ %1").arg(address));
     }
 }
 
 void PPBController::startPRBS_M2S(uint16_t address)
 {
     emit executeCommandRequested(TechCommand::PRBS_M2S, address);
-        emit logMessage(QString("Запуск PRBS_M2S для ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Запуск PRBS_M2S для ППБ %1").arg(address));
 
 }
 
 void PPBController::startPRBS_S2M(uint16_t address)
 {
     emit executeCommandRequested(TechCommand::PRBS_S2M, address);
-        emit logMessage(QString("Запуск PRBS_S2M для ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Запуск PRBS_S2M для ППБ %1").arg(address));
 
 }
 
@@ -223,7 +223,7 @@ void PPBController::startAutoPoll(int intervalMs)
     m_autoPollEnabled = true;
     m_autoPollTimer->start(intervalMs);
     emit autoPollToggled(true);
-    emit logMessage(QString("Автоопрос включен (интервал %1 мс)").arg(intervalMs));
+     LOG_CONTROLLER_INFO(QString("Автоопрос включен (интервал %1 мс)").arg(intervalMs));
 }
 
 void PPBController::stopAutoPoll()
@@ -231,7 +231,7 @@ void PPBController::stopAutoPoll()
     m_autoPollEnabled = false;
     m_autoPollTimer->stop();
     emit autoPollToggled(false);
-    emit logMessage("Автоопрос выключен");
+     LOG_CONTROLLER_INFO("Автоопрос выключен");
 }
 
 PPBState PPBController::connectionState() const
@@ -292,7 +292,7 @@ void PPBController::onCommandProgress(int current, int total, TechCommand comman
 {
     QString operation = commandToName(command);
     emit operationProgress(current, total, operation);
-    emit logMessage(QString("%1: %2/%3").arg(operation).arg(current).arg(total));
+     LOG_CONTROLLER_INFO(QString("%1: %2/%3").arg(operation).arg(current).arg(total));
 }
 
 void PPBController::onCommandCompleted(bool success, const QString& message, TechCommand command)
@@ -302,16 +302,15 @@ void PPBController::onCommandCompleted(bool success, const QString& message, Tec
                          .arg(message);
 
     if (success) {
-        LOG_INFO(logMsg);
-        emit logMessage(logMsg);
+        LOG_CONTROLLER_INFO(logMsg);
 
         if (command == TechCommand::TS) {
             emit connectionStateChanged(PPBState::Ready);
         }
     } else {
-        LOG_WARNING(logMsg);
+        LOG_CONTROLLER_WARNING(logMsg);
         emit errorOccurred(message);
-        emit logMessage("Ошибка: " + message);
+         LOG_CONTROLLER_ERROR("Ошибка: " + message);
     }
 
     // Уведомляем UI о завершении операции
@@ -321,7 +320,7 @@ void PPBController::onCommandCompleted(bool success, const QString& message, Tec
 void PPBController::onErrorOccurred(const QString& error)
 {
     emit errorOccurred(error);
-    emit logMessage("[ОШИБКА] " + error);
+    LOG_CONTROLLER_ERROR("[ОШИБКА] " + error);
 }
 
 void PPBController::onAutoPollTimeout()
@@ -354,7 +353,7 @@ void PPBController::processStatusData(uint16_t address, const QVector<QByteArray
     if (index == -1) return;
 
     if (data.size() < 8) {
-        emit logMessage("Недостаточно данных статуса");
+         LOG_CONTROLLER_WARNING("Недостаточно данных статуса");
         return;
     }
 
@@ -370,7 +369,7 @@ void PPBController::processStatusData(uint16_t address, const QVector<QByteArray
     emit channelStateUpdated(index, 1, channel1);
     emit channelStateUpdated(index, 2, channel2);
 
-    emit logMessage(QString("Статус ППБ%1 обновлен").arg(index + 1));
+    emit  LOG_CONTROLLER_INFO(QString("Статус ППБ%1 обновлен").arg(index + 1));
 }
 
 UIChannelState PPBController::parseChannelData(const QVector<QByteArray>& channelData)
@@ -405,7 +404,7 @@ void PPBController::requestVersion(uint16_t address)
 {
     if (m_communication ) {
         emit executeCommandRequested(TechCommand::VERS, address);
-        emit logMessage(QString("Запрос версии ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Запрос версии ППБ %1").arg(address));
     }
 }
 
@@ -413,7 +412,7 @@ void PPBController::requestVolume(uint16_t address)
 {
     if (m_communication ) {
         emit executeCommandRequested(TechCommand::VOLUME, address);
-        emit logMessage(QString("Запрос тома ПО ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Запрос тома ПО ППБ %1").arg(address));
     }
 }
 
@@ -421,7 +420,7 @@ void PPBController::requestChecksum(uint16_t address)
 {
     if (m_communication ) {
         emit executeCommandRequested(TechCommand::CHECKSUM, address);
-        emit logMessage(QString("Запрос контрольной суммы ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Запрос контрольной суммы ППБ %1").arg(address));
     }
 }
 
@@ -429,7 +428,7 @@ void PPBController::sendProgram(uint16_t address)
 {
     if (m_communication ) {
        emit executeCommandRequested(TechCommand::PROGRAMM, address);
-        emit logMessage(QString("Обновление ПО ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Обновление ПО ППБ %1").arg(address));
     }
 }
 
@@ -437,7 +436,7 @@ void PPBController::sendClean(uint16_t address)
 {
     if (m_communication) {
         emit executeCommandRequested(TechCommand::CLEAN, address);
-        emit logMessage(QString("Очистка временного файла ПО ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Очистка временного файла ПО ППБ %1").arg(address));
     }
 }
 
@@ -445,7 +444,7 @@ void PPBController::requestDroppedPackets(uint16_t address)
 {
     if (m_communication) {
         emit executeCommandRequested(TechCommand::DROP, address);
-        emit logMessage(QString("Запрос отброшенных пакетов ППБ %1").arg(address));
+        LOG_CONTROLLER_INFO(QString("Запрос отброшенных пакетов ППБ %1").arg(address));
     }
 }
 
@@ -453,7 +452,7 @@ void PPBController::requestBER_T(uint16_t address)
 {
     if (m_communication ) {
         emit executeCommandRequested(TechCommand::BER_T, address);
-        emit logMessage(QString("Запрос BER ТУ ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Запрос BER ТУ ППБ %1").arg(address));
     }
 }
 
@@ -461,29 +460,29 @@ void PPBController::requestBER_F(uint16_t address)
 {
     if (m_communication) {
         emit executeCommandRequested(TechCommand::BER_F, address);
-        emit logMessage(QString("Запрос BER ФУ ППБ %1").arg(address));
+         LOG_CONTROLLER_INFO(QString("Запрос BER ФУ ППБ %1").arg(address));
     }
 }
 //++++++++++++++++++++++++++++++++++++++
 void PPBController::setCommunication(PPBCommunication* communication)
 {
-    LOG_DEBUG("PPBController::setCommunication: новый объект = " +
+    LOG_CONTROLLER_DEBUG("PPBController::setCommunication: новый объект = " +
               QString::number((qulonglong)communication) +
               ", текущий = " + QString::number((qulonglong)m_communication));
 
     // Если передается тот же объект - ничего не делаем
     if (m_communication == communication) {
-        LOG_DEBUG("PPBController::setCommunication: тот же объект, игнорируем");
+        LOG_CONTROLLER_DEBUG("PPBController::setCommunication: тот же объект, игнорируем");
         return;
     }
 
     // ========== ОТКЛЮЧЕНИЕ СТАРОГО КОММУНИКАЦИОННОГО ОБЪЕКТА ==========
     if (m_communication) {
-        LOG_DEBUG("PPBController::setCommunication: отключаем старый объект");
+        LOG_CONTROLLER_DEBUG("PPBController::setCommunication: отключаем старый объект");
 
         // 1. Останавливаем автоопрос, если он активен
         if (m_autoPollTimer && m_autoPollTimer->isActive()) {
-            LOG_DEBUG("PPBController::setCommunication: останавливаем автоопрос");
+            LOG_CONTROLLER_DEBUG("PPBController::setCommunication: останавливаем автоопрос");
             m_autoPollTimer->stop();
         }
 
@@ -493,12 +492,12 @@ void PPBController::setCommunication(PPBCommunication* communication)
 
         // 3. Вызываем физическое отключение от ППБ (если нужно)
         if (m_communication->state() == PPBState::Ready) {
-            LOG_DEBUG("PPBController::setCommunication: отключаемся от ППБ");
+            LOG_CONTROLLER_DEBUG("PPBController::setCommunication: отключаемся от ППБ");
             m_communication->disconnect();
         }
 
         // 4. Удаляем старый объект
-        LOG_DEBUG("PPBController::setCommunication: удаляем старый объект");
+        LOG_CONTROLLER_DEBUG("PPBController::setCommunication: удаляем старый объект");
         m_communication->deleteLater();
         m_communication = nullptr;
 
@@ -509,21 +508,21 @@ void PPBController::setCommunication(PPBCommunication* communication)
 
         // 6. Уведомляем UI об отключении
         emit connectionStateChanged(PPBState::Idle);
-        emit logMessage("Коммуникационный объект заменен");
+        LOG_CONTROLLER_INFO("Коммуникационный объект заменен");
     }
 
     // ========== УСТАНОВКА НОВОГО ОБЪЕКТА ==========
     m_communication = communication;
 
     if (m_communication) {
-        LOG_DEBUG("PPBController::setCommunication: настраиваем новый объект");
+        LOG_CONTROLLER_DEBUG("PPBController::setCommunication: настраиваем новый объект");
 
         // 1. Подключаем сигналы (используем метод из ШАГА 1)
         connectCommunicationSignals();
 
         // 2. Проверяем текущее состояние нового communication
         PPBState newState = m_communication->state();
-        LOG_DEBUG(QString("PPBController::setCommunication: состояние нового объекта = %1")
+        LOG_CONTROLLER_DEBUG(QString("PPBController::setCommunication: состояние нового объекта = %1")
                       .arg(static_cast<int>(newState)));
 
         // 3. Уведомляем UI о текущем состоянии
@@ -531,21 +530,21 @@ void PPBController::setCommunication(PPBCommunication* communication)
 
         // 4. Если автоопрос был включен - перезапускаем
         if (m_autoPollEnabled && m_autoPollTimer) {
-            LOG_DEBUG("PPBController::setCommunication: перезапускаем автоопрос");
+            LOG_CONTROLLER_DEBUG("PPBController::setCommunication: перезапускаем автоопрос");
             m_autoPollTimer->start();
         }
 
-        LOG_INFO("PPBController: коммуникационный объект успешно заменен");
-        emit logMessage("Новый коммуникационный объект установлен");
+        LOG_CONTROLLER_INFO("PPBController: коммуникационный объект успешно заменен");
+
     } else {
-        LOG_WARNING("PPBController::setCommunication: передан nullptr");
-        emit logMessage("Коммуникационный объект удален");
+        LOG_CONTROLLER_WARNING("PPBController::setCommunication: передан nullptr");
+
     }
 }
 void PPBController::setCurrentAddress(uint16_t address)
 {
     if (m_currentAddress != address) {
-        LOG_DEBUG(QString("PPBController: изменение текущего адреса: 0x%1 -> 0x%2")
+        LOG_CONTROLLER_DEBUG(QString("PPBController: изменение текущего адреса: 0x%1 -> 0x%2")
                       .arg(m_currentAddress, 4, 16, QChar('0'))
                       .arg(address, 4, 16, QChar('0')));
         m_currentAddress = address;

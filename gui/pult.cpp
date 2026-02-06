@@ -25,8 +25,8 @@ pult::pult(uint16_t address, PPBController* controller, QWidget *parent)
     });
 
     // Подключаем сигналы для обратной связи
-    connect(m_controller, &PPBController::logMessage,
-            this, &pult::onControllerLogMessage);
+   /* connect(m_controller, &PPBController::logMessage,
+            this, &pult::onControllerLogMessage); */
     connect(m_controller, &PPBController::errorOccurred,
             this, &pult::onControllerErrorOccurred);
     connect(m_controller, &PPBController::operationCompleted,

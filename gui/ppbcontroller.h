@@ -66,7 +66,7 @@ signals:
     void busyChanged(bool busy);
     void statusReceived(uint16_t address, const QVector<QByteArray>& data);
     void errorOccurred(const QString& error);
-    void logMessage(const QString& message);
+   // void logMessage(const QString& message);
     void channelStateUpdated(uint8_t ppbIndex, int channel, const UIChannelState& state);
     void autoPollToggled(bool enabled);
     void connectToPPBSignal(uint16_t address, const QString& ip, quint16 port);

@@ -1,59 +1,61 @@
-// В logger.h добавляем:
+// logger.h - добавляем в начало
 #ifndef LOGGER_H
 #define LOGGER_H
+#include <atomic>
 #include <QMutex>
 #include <QString>
 #include <QFile>
 #include <QTextStream>
 #include <functional>
+#include "logentry.h"  // Добавляем
 
 class Logger
 {
 public:
     // Тип для функции обратного вызова в UI
-    using UICallback = std::function<void(const QString&)>;
+    using UICallback = std::function<void(const LogEntry&)>;
 
-    // Простая инициализация
+    // Инициализация
     static void init();
-    static void init(UICallback uiCallback); // С callback для UI
+    static void init(UICallback uiCallback);
 
-    // Простые методы логирования
+    // Основной метод записи
+    static void write(const LogEntry& entry);
+
+    // Упрощенные методы (для обратной совместимости)
     static void debug(const QString& message);
     static void info(const QString& message);
     static void warning(const QString& message);
     static void error(const QString& message);
 
-    static void setUiOutputEnabled(bool enabled);
-    static void setFileOutputEnabled(bool enabled);
-    static void setConsoleOutputEnabled(bool enabled);
+    // Методы с категориями
+    static void debug(const QString& category, const QString& message);
+    static void info(const QString& category, const QString& message);
+    static void warning(const QString& category, const QString& message);
+    static void error(const QString& category, const QString& message);
 
-    // Для вывода в UI
-    static QString lastLog() { return m_lastLog; }
-
-    // Установка callback для UI
+    // Установка callback
     static void setUICallback(UICallback callback);
 
-signals:
-    void messageLogged(const QString& message);  // Сигнал для UI
+    // Геттеры
+    static QString lastLog() { return m_lastLog; }
+    static bool isInitialized() { return m_initialized; }
+    static void setShutdownMode(bool shutdown) ;
 private:
-    Logger() = delete; // Статический класс
-     static QMutex m_logMutex;
+    Logger() = delete;
 
-    static void write(const QString& level, const QString& message);
+    // Внутренние методы записи
     static void writeToFile(const QString& message);
     static void writeToConsole(const QString& message);
-    static void writeToUI(const QString& message);
+    static void writeToUI(const LogEntry& entry);
 
+    // Статические члены
+    static QMutex m_logMutex;
     static QFile m_logFile;
     static QString m_lastLog;
     static bool m_initialized;
     static UICallback m_uiCallback;
+    static std::atomic<bool> m_shutdown;
 };
-
-// Макросы для удобства
-#define LOG_DEBUG(msg) Logger::debug(msg)
-#define LOG_INFO(msg) Logger::info(msg)
-#define LOG_WARNING(msg) Logger::warning(msg)
-#define LOG_ERROR(msg) Logger::error(msg)
 
 #endif // LOGGER_H

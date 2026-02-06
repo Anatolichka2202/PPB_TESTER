@@ -8,7 +8,7 @@
 #include "packetbuilder.h"
 #include "commandinterface.h"
 #include <QTimer>
-#include "../logger.h"
+#include "../logwrapper.h"
 namespace PPBConstants {
 constexpr int OPERATION_TIMEOUT_MS = 5000;    // Таймаут операции 5 сек
 constexpr int PACKET_TIMEOUT_MS = 1000;       // Таймаут между пакетами 1 сек
@@ -60,7 +60,7 @@ public:
     virtual void onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const
     {
         if (!comm) {
-            LOG_WARNING("PPBCommand::onDataReceived: comm is nullptr!");
+            LOG_CAT_WARNING("COMMAND","PPBCommand::onDataReceived: comm is nullptr!");
             return;
         }
 

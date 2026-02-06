@@ -1,5 +1,5 @@
 #include "udpclient.h"
-#include "../logger.h"
+#include "../logwrapper.h"
 #include <QNetworkDatagram>
 #include <QDebug>
 #include <QThread>
@@ -17,7 +17,7 @@ UDPClient::UDPClient(QObject* parent)
 
 UDPClient::~UDPClient()
 {
-    LOG_INFO("UDPClient деструктор");
+    LOG_CAT_INFO("UDP", "UDPClient деструктор");
 
     if (m_socket) {
         m_socket->close();
@@ -33,24 +33,24 @@ void UDPClient::initializeInThread()
 
     // Этот метод должен вызываться в том потоке, где будет работать UDPClient
     if (m_socket) {
-        LOG_WARNING("UDPClient уже инициализирован");
+        LOG_CAT_WARNING("UDP", " уже инициализирован");
         return;
     }
 
     try {
         setupSocket();
-        LOG_INFO("UDPClient успешно инициализирован в потоке");
+        LOG_CAT_INFO("UDP","успешно инициализирован в потоке");
         emit initialized();
 
     } catch (const std::exception& e) {
-        LOG_ERROR("Ошибка инициализации UDPClient: " + QString(e.what()));
+        LOG_CAT_ERROR("UDP", "Ошибка инициализации: " + QString(e.what()));
         emit errorOccurred(QString("Ошибка инициализации UDPClient: %1").arg(e.what()));
     }
 }
 
 void UDPClient::setupSocket()
 {
-    LOG_INFO("UDPClient::setupSocket");
+    LOG_CAT_INFO("UDP", "::setupSocket");
 
     // Создаем сокет
     m_socket = new QUdpSocket(this);
@@ -78,22 +78,22 @@ void UDPClient::setupSocket()
                 emit errorOccurred(errorMsg);
             });
 
-    LOG_INFO("UDPClient сокет настроен и привязан к порту " + QString::number(m_boundPort));
+    LOG_CAT_INFO("UDP", " сокет настроен и привязан к порту " + QString::number(m_boundPort));
 }
 
 bool UDPClient::bind(quint16 port)
 {
     if (!m_socket) {
-        LOG_ERROR("UDPClient::bind - сокет не создан");
+        LOG_CAT_ERROR("UDP", "::bind - сокет не создан");
         return false;
     }
 
     if (m_isBound) {
-        LOG_INFO("UDPClient уже привязан к порту " + QString::number(m_boundPort));
+        LOG_CAT_INFO("UDP", "уже привязан к порту " + QString::number(m_boundPort));
         return true;
     }
 
-    LOG_INFO("UDPClient::bind - попытка привязки к порту " + QString::number(port));
+    LOG_CAT_INFO("UDP","::bind - попытка привязки к порту " + QString::number(port));
 
     // Пробуем привязаться
     if (m_socket->bind(QHostAddress::Any, port, QUdpSocket::ReuseAddressHint)) {
@@ -101,7 +101,7 @@ bool UDPClient::bind(quint16 port)
         m_boundPort = m_socket->localPort();
         m_boundAddress = m_socket->localAddress();
 
-        LOG_INFO("UDPClient успешно привязан к порту " + QString::number(m_boundPort) +
+        LOG_CAT_INFO("UDP", "успешно привязан к порту " + QString::number(m_boundPort) +
                  " на адресе " + m_boundAddress.toString());
 
         emit bindingChanged(true);
@@ -110,7 +110,7 @@ bool UDPClient::bind(quint16 port)
         QString errorMsg = QString("Не удалось привязаться к порту %1: %2")
                                .arg(port)
                                .arg(m_socket->errorString());
-        LOG_ERROR(errorMsg);
+        LOG_CAT_ERROR("UDP", errorMsg);
         emit errorOccurred(errorMsg);
         return false;
     }
@@ -118,7 +118,7 @@ bool UDPClient::bind(quint16 port)
 
 void UDPClient::unbind()
 {
-    LOG_INFO("UDPClient::unbind");
+    LOG_CAT_INFO("UDP", "::unbind");
 
     if (m_socket && m_isBound) {
         m_socket->close();
@@ -127,7 +127,7 @@ void UDPClient::unbind()
         m_boundAddress.clear();
 
         emit bindingChanged(false);
-        LOG_INFO("UDPClient отвязан от порта");
+        LOG_CAT_INFO("UDP","отвязан от порта");
     }
 }
 
@@ -139,24 +139,24 @@ bool UDPClient::isBound() const
 
 qint64 UDPClient::sendTo(const QByteArray& data, const QString& address, quint16 port)
 {
-    LOG_DEBUG(QString("UDPClient::sendTo: адрес=%1, порт=%2, размер=%3 байт")
+    LOG_CAT_DEBUG("UDP", QString("::sendTo: адрес=%1, порт=%2, размер=%3 байт")
                   .arg(address).arg(port).arg(data.size()));
 
     if (!m_socket) {
-        LOG_ERROR("UDPClient::sendTo - сокет не инициализирован");
+        LOG_CAT_ERROR("UDP", "::sendTo - сокет не инициализирован");
         emit errorOccurred("Сокет не инициализирован");
         return -1;
     }
 
     if (!m_isBound) {
-        LOG_ERROR("UDPClient::sendTo - сокет не привязан");
+        LOG_CAT_ERROR("UDP", "::sendTo - сокет не привязан");
         emit errorOccurred("Сокет не привязан к порту");
         return -1;
     }
 
     QHostAddress hostAddress;
     if (!hostAddress.setAddress(address)) {
-        LOG_ERROR("UDPClient::sendTo - неверный адрес: " + address);
+        LOG_CAT_ERROR("UDP","::sendTo - неверный адрес: " + address);
         emit errorOccurred("Неверный адрес: " + address);
         return -1;
     }
@@ -168,10 +168,10 @@ qint64 UDPClient::sendTo(const QByteArray& data, const QString& address, quint16
                                .arg(address)
                                .arg(port)
                                .arg(m_socket->errorString());
-        LOG_ERROR(errorMsg);
+        LOG_CAT_ERROR("UDP", errorMsg);
         emit errorOccurred(errorMsg);
     } else {
-        LOG_DEBUG(QString("UDPClient отправлено %1 байт на %2:%3")
+        LOG_CAT_DEBUG("UDP", QString("отправлено %1 байт на %2:%3")
                       .arg(bytesSent).arg(address).arg(port));
         emit dataSent(bytesSent);
     }
@@ -185,13 +185,13 @@ qint64 UDPClient::sendBroadcast(const QByteArray& data, quint16 port)
                   .arg(port).arg(data.size()));
 
     if (!m_socket) {
-        LOG_ERROR("UDPClient::sendBroadcast - сокет не инициализирован");
+        LOG_CAT_ERROR("UDP","::sendBroadcast - сокет не инициализирован");
         emit errorOccurred("Сокет не инициализирован");
         return -1;
     }
 
     if (!m_isBound) {
-        LOG_ERROR("UDPClient::sendBroadcast - сокет не привязан");
+        LOG_CAT_ERROR("UDP","::sendBroadcast - сокет не привязан");
         emit errorOccurred("Сокет не привязан к порту");
         return -1;
     }
@@ -213,10 +213,10 @@ qint64 UDPClient::sendBroadcast(const QByteArray& data, quint16 port)
         QString errorMsg = QString("Ошибка широковещательной отправки на порт %1: %2")
                                .arg(port)
                                .arg(m_socket->errorString());
-        LOG_ERROR(errorMsg);
+        LOG_CAT_ERROR("UDP",errorMsg);
         emit errorOccurred(errorMsg);
     } else {
-        LOG_DEBUG(QString("UDPClient отправлено широковещательно %1 байт на порт %2")
+        LOG_CAT_DEBUG("UDP",QString(" отправлено широковещательно %1 байт на порт %2")
                       .arg(bytesSent).arg(port));
         emit dataSent(bytesSent);
     }
@@ -238,7 +238,7 @@ void UDPClient::readPendingDatagrams()
             QHostAddress sender = datagram.senderAddress();
             quint16 port = datagram.senderPort();
 
-            LOG_DEBUG(QString("UDPClient получено %1 байт от %2:%3")
+            LOG_CAT_DEBUG("UDP",QString("UDPClient получено %1 байт от %2:%3")
                           .arg(data.size())
                           .arg(sender.toString())
                           .arg(port));
@@ -252,12 +252,12 @@ void UDPClient::readPendingDatagrams()
                 if (data.size() > 8) {
                     hexData += "...";
                 }
-                LOG_DEBUG(QString("Данные [%1 байт]: %2").arg(data.size()).arg(hexData));
+                LOG_CAT_DEBUG("UDP", QString("Данные [%1 байт]: %2").arg(data.size()).arg(hexData));
             }
 
             emit dataReceived(data, sender, port);
         } else {
-            LOG_WARNING("UDPClient получил невалидную датаграмму");
+            LOG_CAT_WARNING("UDP","получил невалидную датаграмму");
         }
     }
 }

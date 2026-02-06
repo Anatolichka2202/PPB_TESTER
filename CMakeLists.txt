@@ -30,8 +30,8 @@ set(PROJECT_SOURCES
         core/communication/ppbprotocol.h
         core/communication/udpclient.cpp
         core/communication/udpclient.h
-        core/scenariomanager.h
-        core/scenariomanager.cpp
+
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -55,11 +55,13 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         core/communication/commandandoperation.h core/communication/commandandoperation.cpp
         gui/ppbcontroller.h gui/ppbcontroller.cpp
         core/communication/commandinterface.h
-        analyzer/testsequencecomparator.h analyzer/testsequencecomparator.cpp
+
         core/applicationmanager.h core/applicationmanager.cpp
         core/AKIP/akip_manager.h core/AKIP/akip_manager.cpp
         core/communication/communicationengine.h core/communication/communicationengine.cpp
         core/utilits/fileloader.h core/utilits/fileloader.cpp
+        core/logwrapper.h core/logwrapper.cpp
+        core/logentry.h
 
 
 

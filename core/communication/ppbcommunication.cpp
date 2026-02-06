@@ -15,7 +15,7 @@ PPBCommunication::PPBCommunication(QObject* parent)
     , m_currentPort(0)
     , m_processingTask(false)
 {
-    LOG_INFO("PPBCommunication конструктор вызван");
+    LOG_CAT_INFO("PPBcom","PPBCommunication конструктор вызван");
 
     // Таймер для обработки очереди (для обратной совместимости)
     m_taskTimer = new QTimer(this);
@@ -25,24 +25,25 @@ PPBCommunication::PPBCommunication(QObject* parent)
 
 PPBCommunication::~PPBCommunication()
 {
-    LOG_INFO("~PPBCommunication: начало");
+    LOG_CAT_INFO("PPBcom","~PPBCommunication: начало");
 
     // Останавливаем движок
     if (m_engine) {
         m_engine->disconnect();
     }
 
-    LOG_INFO("~PPBCommunication: завершение");
+    LOG_CAT_INFO("PPBcom","~PPBCommunication: завершение");
 }
+
 
 void PPBCommunication::initialize(UDPClient* udpClient)
 {
-    LOG_INFO("PPBCommunication::initialize начат в потоке: " +
+    LOG_CAT_INFO("PPBcom","PPBCommunication::initialize начат в потоке: " +
              QString::number((qulonglong)QThread::currentThreadId()));
 
     // Этот метод должен выполняться в потоке объекта!
     if (QThread::currentThread() != this->thread()) {
-        LOG_WARNING("PPBCommunication::initialize: вызван не из своего потока");
+        LOG_CAT_WARNING("PPBcom","PPBCommunication::initialize: вызван не из своего потока");
         QMetaObject::invokeMethod(this, "initialize", Qt::QueuedConnection,
                                   Q_ARG(UDPClient*, udpClient));
         return;
@@ -73,19 +74,19 @@ void PPBCommunication::initialize(UDPClient* udpClient)
             connect(m_engine.get(), &communicationengine::errorOccurred,
                     this, &PPBCommunication::onEngineErrorOccurred);
 
-            connect(m_engine.get(), &communicationengine::logMessage,
-                    this, &PPBCommunication::onEngineLogMessage);
+           /* connect(m_engine.get(), &communicationengine::logMessage,
+                    this, &PPBCommunication::onEngineLogMessage); */
         }
 
 
-        LOG_INFO("PPBCommunication::initialize: инициализация завершена успешно");
+        LOG_CAT_INFO("PPBcom","PPBCommunication::initialize: инициализация завершена успешно");
         emit initialized();
 
     } catch (const std::exception& e) {
-        LOG_ERROR("PPBCommunication::initialize: исключение: " + QString(e.what()));
+        LOG_CAT_ERROR("PPBcom","PPBCommunication::initialize: исключение: " + QString(e.what()));
         emit errorOccurred(QString("Ошибка инициализации: %1").arg(e.what()));
     } catch (...) {
-        LOG_ERROR("PPBCommunication::initialize: неизвестное исключение");
+        LOG_CAT_ERROR("PPBcom","PPBCommunication::initialize: неизвестное исключение");
         emit errorOccurred("Неизвестная ошибка инициализации");
     }
 }
@@ -94,7 +95,7 @@ void PPBCommunication::initialize(UDPClient* udpClient)
 
 bool PPBCommunication::connectToPPB(uint16_t address, const QString& ip, quint16 port)
 {
-    LOG_INFO(QString("PPBCommunication::connectToPPB (фасад): address=0x%1, ip=%2, port=%3")
+    LOG_CAT_INFO("PPBcom",QString("PPBCommunication::connectToPPB (фасад): address=0x%1, ip=%2, port=%3")
                  .arg(address, 4, 16, QChar('0'))
                  .arg(ip).arg(port));
 
@@ -107,7 +108,7 @@ bool PPBCommunication::connectToPPB(uint16_t address, const QString& ip, quint16
         return m_engine->connectToPPB(address, ip, port);
 
     } else {
-        LOG_ERROR("communicationengine не инициализирован");
+        LOG_CAT_ERROR("PPBcom","communicationengine не инициализирован");
         emit errorOccurred("Движок обработки команд не инициализирован");
         return false;
     }
@@ -115,7 +116,7 @@ bool PPBCommunication::connectToPPB(uint16_t address, const QString& ip, quint16
 
 void PPBCommunication::disconnect()
 {
-    LOG_INFO("PPBCommunication::disconnect (фасад)");
+    LOG_CAT_INFO("PPBcom","PPBCommunication::disconnect (фасад)");
 
     if (m_engine) {
         m_engine->disconnect();
@@ -127,40 +128,40 @@ void PPBCommunication::disconnect()
 
 void PPBCommunication::executeCommand(TechCommand cmd, uint16_t address)
 {
-    LOG_INFO(QString("PPBCommunication::executeCommand (фасад): cmd=%1, address=0x%2")
+    LOG_CAT_INFO("PPBcom",QString("PPBCommunication::executeCommand (фасад): cmd=%1, address=0x%2")
                  .arg(static_cast<int>(cmd))
                  .arg(address, 4, 16, QChar('0')));
 
     if (m_engine) {
         m_engine->executeCommand(cmd, address);
     } else {
-        LOG_ERROR("communicationengine не инициализирован");
+        LOG_CAT_ERROR("PPBcom","communicationengine не инициализирован");
         emit errorOccurred("Движок обработки команд не инициализирован");
     }
 }
 
 void PPBCommunication::sendFUTransmit(uint16_t address)
 {
-    LOG_INFO(QString("PPBCommunication::sendFUTransmit (фасад): address=0x%1")
+    LOG_CAT_INFO("PPBcom",QString("PPBCommunication::sendFUTransmit (фасад): address=0x%1")
                  .arg(address, 4, 16, QChar('0')));
 
     if (m_engine) {
         m_engine->sendFUTransmit(address);
     } else {
-        LOG_ERROR("communicationengine не инициализирован");
+        LOG_CAT_ERROR("PPBcom","communicationengine не инициализирован");
         emit errorOccurred("Движок обработки команд не инициализирован");
     }
 }
 
 void PPBCommunication::sendFUReceive(uint16_t address, uint8_t period, const uint8_t fuData[3])
 {
-    LOG_INFO(QString("PPBCommunication::sendFUReceive (фасад): address=0x%1, period=%2")
+    LOG_CAT_INFO("PPBcom",QString("PPBCommunication::sendFUReceive (фасад): address=0x%1, period=%2")
                  .arg(address, 4, 16, QChar('0')).arg(period));
 
     if (m_engine) {
         m_engine->sendFUReceive(address, period, fuData);
     } else {
-        LOG_ERROR("communicationengine не инициализирован");
+        LOG_CAT_ERROR("PPBcom","communicationengine не инициализирован");
         emit errorOccurred("Движок обработки команд не инициализирован");
     }
 }
@@ -177,13 +178,13 @@ void PPBCommunication::startTimeoutTimer(int ms)
 {
     // Больше не используется напрямую, т.к. таймеры в communicationengine
     Q_UNUSED(ms);
-    LOG_DEBUG("PPBCommunication::startTimeoutTimer - вызов игнорируется (управляется в движке)");
+    LOG_CAT_DEBUG("PPBcom","PPBCommunication::startTimeoutTimer - вызов игнорируется (управляется в движке)");
 }
 
 void PPBCommunication::stopTimeoutTimer()
 {
     // Больше не используется напрямую
-    LOG_DEBUG("PPBCommunication::stopTimeoutTimer - вызов игнорируется (управляется в движке)");
+    LOG_CAT_DEBUG("PPBcom","PPBCommunication::stopTimeoutTimer - вызов игнорируется (управляется в движке)");
 }
 
 void PPBCommunication::completeCurrentOperation(bool success, const QString& message) {
@@ -247,7 +248,7 @@ void PPBCommunication::onEngineErrorOccurred(const QString& error)
 
 void PPBCommunication::onEngineLogMessage(const QString& message)
 {
-    emit logMessage(message);
+    LOG_CAT_INFO("PPBcom",message);
 }
 
 // ===== ПРИВАТНЫЕ МЕТОДЫ =====
@@ -260,7 +261,7 @@ void PPBCommunication::setStateInternal(PPBState state)
     PPBState oldState = m_state;
     m_state = state;
 
-    LOG_DEBUG(QString("Состояние изменено: %1 -> %2")
+    LOG_CAT_DEBUG("PPBcom",QString("Состояние изменено: %1 -> %2")
                   .arg(static_cast<int>(oldState))
                   .arg(static_cast<int>(state)));
 
@@ -275,7 +276,7 @@ void PPBCommunication::setStateInternal(PPBState state)
 void PPBCommunication::setError(const QString& error)
 {
     m_lastError = error;
-    LOG_ERROR(error);
+    LOG_CAT_ERROR("PPBcom",error);
 }
 
 // ===== МЕТОДЫ ДЛЯ ОБРАТНОЙ СОВМЕСТИМОСТИ =====
@@ -307,7 +308,7 @@ void PPBCommunication::processNextTask()
 }
 
 void PPBCommunication::setParseResult(bool success, const QString& message) {
-    LOG_DEBUG(QString("PPBCommunication::setParseResult: %1 - %2")
+    LOG_CAT_DEBUG("PPBcom",QString("PPBCommunication::setParseResult: %1 - %2")
                   .arg(success ? "УСПЕХ" : "ОШИБКА")
                   .arg(message));
 
@@ -316,25 +317,25 @@ void PPBCommunication::setParseResult(bool success, const QString& message) {
         // Нужно будет добавить соответствующий метод в communicationengine
         m_engine->setCommandParseResult(m_currentAddress, success, message);
     } else {
-        LOG_WARNING("setParseResult: движок не инициализирован");
+        LOG_CAT_WARNING("PPBcom","setParseResult: движок не инициализирован");
     }
 }
 
 void PPBCommunication::setParseData(const QVariant& parsedData) {
-    LOG_DEBUG(QString("PPBCommunication::setParseData: тип данных: %1")
+    LOG_CAT_DEBUG("PPBcom",QString("PPBCommunication::setParseData: тип данных: %1")
                   .arg(parsedData.typeName()));
 
     if (m_engine) {
         // Передаем дополнительные данные парсинга в движок
         m_engine->setCommandParseData(m_currentAddress, parsedData);
     } else {
-        LOG_WARNING("setParseData: движок не инициализирован");
+        LOG_CAT_WARNING("PPBcom","setParseData: движок не инициализирован");
     }
 }
 
 void PPBCommunication::stop()
 {
-    LOG_INFO("PPBCommunication::stop() - остановка");
+    LOG_CAT_INFO("PPBcom","PPBCommunication::stop() - остановка");
 
     // Останавливаем движок
     if (m_engine) {
@@ -353,5 +354,5 @@ void PPBCommunication::stop()
     // Сбрасываем состояние
     setStateInternal(PPBState::Idle);
 
-    LOG_INFO("PPBCommunication остановлен");
+    LOG_CAT_INFO("PPBcom","PPBCommunication остановлен");
 }

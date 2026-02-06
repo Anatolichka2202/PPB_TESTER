@@ -1,6 +1,5 @@
 #include "commandandoperation.h"
-#include "../../analyzer/testsequencecomparator.h"
-#include "../logger.h"
+#include "../logwrapper.h"
 #include <QDataStream>
 #include <QtEndian>
 
@@ -83,7 +82,7 @@ bool StatusCommand::parseResponseData(const QVector<QByteArray>& data,
 
 void StatusCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
-        LOG_WARNING("StatusCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","StatusCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
@@ -124,7 +123,7 @@ bool VersCommand::parseResponseData(const QVector<QByteArray>& data,
 
 void VersCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
-        LOG_WARNING("VersCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","VersCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
@@ -181,7 +180,7 @@ bool CheckSumCommand::parseResponseData(const QVector<QByteArray>& data,
 
 void CheckSumCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
-        LOG_WARNING("CheckSumCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","CheckSumCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
@@ -216,7 +215,7 @@ bool DROPCommand::parseResponseData(const QVector<QByteArray>& data,
 
 void DROPCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
-        LOG_WARNING("DROPCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","DROPCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
@@ -253,7 +252,7 @@ bool BER_TCommand::parseResponseData(const QVector<QByteArray>& data,
 
 void BER_TCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
-        LOG_WARNING("BER_TCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","BER_TCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
@@ -290,7 +289,7 @@ bool BER_FCommand::parseResponseData(const QVector<QByteArray>& data,
 
 void BER_FCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const {
     if (!comm) {
-        LOG_WARNING("BER_FCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","BER_FCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
@@ -307,7 +306,7 @@ void BER_FCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArr
 // PRBS_M2S
 void PRBS_M2SCommand::onOkReceived(CommandInterface* comm, uint16_t address) const {
     if (!comm) {
-        LOG_WARNING("StatusCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","StatusCommand::onDataReceived: comm is nullptr!");
         return;
     }
     // Генерируем тестовые пакеты прямо здесь
@@ -361,7 +360,7 @@ bool PRBS_S2MCommand::parseResponseData(const QVector<QByteArray>& data,
 void PRBS_S2MCommand::onDataReceived(CommandInterface* comm, const QVector<QByteArray>& data) const
 {
     if (!comm) {
-        LOG_WARNING("PRBS_S2MCommand::onDataReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","PRBS_S2MCommand::onDataReceived: comm is nullptr!");
         return;
     }
 
@@ -375,7 +374,7 @@ void PRBS_S2MCommand::onDataReceived(CommandInterface* comm, const QVector<QByte
             receivedPackets.append(packet);
         } else {
             parseErrors++;
-            LOG_WARNING(QString("Ошибка парсинга пакета %1").arg(receivedPackets.size() + parseErrors));
+            LOG_CAT_WARNING("Command",QString("Ошибка парсинга пакета %1").arg(receivedPackets.size() + parseErrors));
         }
     }
 
@@ -414,7 +413,7 @@ void PRBS_S2MCommand::onDataReceived(CommandInterface* comm, const QVector<QByte
 // VOLUME
 void VolumeCommand::onOkReceived(CommandInterface* comm, uint16_t address) const {
     if (!comm) {
-        LOG_WARNING("VolumeCommand::onOkReceived: comm is nullptr!");
+        LOG_CAT_WARNING("Command","VolumeCommand::onOkReceived: comm is nullptr!");
         return;
     }
 

@@ -5,6 +5,7 @@
 #include "ppbcontroller.h"
 #include "pult.h"
 #include <QGroupBox>
+#include "../core/logentry.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TesterWindow; }
@@ -46,7 +47,7 @@ private slots:
     void onControllerConnectionStateChanged(PPBState state);
     void onControllerStatusReceived(uint16_t address, const QVector<QByteArray>& data);
     void onControllerErrorOccurred(const QString& error);
-    void onControllerLogMessage(const QString& message);
+   // void onControllerLogMessage(const QString& message);
     void onControllerChannelStateUpdated(uint8_t ppbIndex, int channel, const UIChannelState& state);
     void onAutoPollToggledFromController(bool enabled);
 
@@ -56,9 +57,13 @@ private slots:
 
     void onControllerBusyChanged(bool busy);
 
+    //  СЛОТ для обработки логов
+    void onLogEntryReceived(const LogEntry& entry);
+
 private:
     void initializeUI();
     void connectSignals();
+     void setupLogging();
     void updateConnectionUI();
     void updateChannelDisplay(QGroupBox* channelBox, const UIChannelState& channel, bool showCodes);
     void updateControlsState();
@@ -67,9 +72,14 @@ private:
     void showStatusMessage(const QString& message, int timeout = 3000);
     void updateWindowTitle();
 
+    // Получение параметров из UI
     uint16_t getSelectedAddress() const;
     QString getSelectedIP() const;
     quint16 getSelectedPort() const;
+
+    // Форматирование логов
+    QString formatLogEntryToHtml(const LogEntry& entry);
+    QString formatLogEntryToPlainText(const LogEntry& entry);
 
     // Утилиты
     QString formatPower(float watts, bool showCodes) const;
@@ -83,6 +93,8 @@ private:
     bool m_displayAsCodes;
     uint8_t m_currentPPBIndex;
     bool m_isExiting;
+
+     QVector<LogEntry> m_logEntries; // Храним логи для экспорта
 };
 
 #endif // TESTERWINDOW_H
