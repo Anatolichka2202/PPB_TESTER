@@ -1,7 +1,11 @@
 #include "communicationengine.h"
 #include <QMutex>
 #include <QThread>
-#include "../logwrapper.h"
+
+#include "../logging/logging_unified.h"
+
+static int techCommandType = qRegisterMetaType<TechCommand>("TechCommand");
+
 // Определения методов для Internal::StateManager
 namespace Internal {
 
@@ -116,34 +120,26 @@ communicationengine::~communicationengine() {
     m_queueTimer->stop();
 
     // Очищаем все контексты и их таймеры
-    QMutexLocker locker(&m_contextsMutex);
-    for (auto& pair : m_contexts) {
-        PPBContext& context = pair.second;
-        if (context.operationTimer) {
-            context.operationTimer->stop();
-            delete context.operationTimer;
-        }
-    }
+
     m_contexts.clear();
 }
 
 
 // Получаем контекст для адреса
 communicationengine::PPBContext* communicationengine::getContext(uint16_t address) {
-    QMutexLocker locker(&m_contextsMutex);
+    //QMutexLocker locker(&m_contextsMutex);
     return &m_contexts[address];  // std::unordered_map автоматически создает элемент
 }
 
 // Очищаем контекст
 void communicationengine::clearContext(uint16_t address) {
      LOG_CAT_DEBUG("Engine",QString("Очистка контекста для адреса 0x%1").arg(address, 4, 16, QChar('0')));
-    QMutexLocker locker(&m_contextsMutex);
+    //QMutexLocker locker(&m_contextsMutex);
     auto it = m_contexts.find(address);
     if (it != m_contexts.end()) {
         if (it->second.operationTimer) {
-            LOG_CAT_DEBUG("Engine","Остановка таймера операции");
             it->second.operationTimer->stop();
-            it->second.operationTimer->deleteLater();
+           it->second.operationTimer.reset();
         }
         m_contexts.erase(it);
           LOG_CAT_DEBUG("Engine","Контекст удален");
@@ -151,6 +147,17 @@ void communicationengine::clearContext(uint16_t address) {
 }
 
 bool communicationengine::connectToPPB(uint16_t address, const QString& ip, quint16 port) {
+
+    if (QThread::currentThread() != this->thread()) {
+                bool result = false;
+                QMetaObject::invokeMethod(this, "connectToPPB", Qt::BlockingQueuedConnection,
+                                                                     Q_RETURN_ARG(bool, result),
+                                                                     Q_ARG(uint16_t, address),
+                                                                     Q_ARG(QString, ip),
+                                                                     Q_ARG(quint16, port));
+                return result;
+            }
+
     LOG_CAT_INFO("Engine",QString("communicationengine::connectToPPB: адрес=0x%1, IP=%2, порт=%3")
                  .arg(address, 4, 16, QChar('0'))
                  .arg(ip).arg(port));
@@ -170,6 +177,12 @@ bool communicationengine::connectToPPB(uint16_t address, const QString& ip, quin
 }
 
 void communicationengine::disconnect() {
+
+    if (QThread::currentThread() != this->thread()) {
+                QMetaObject::invokeMethod(this, "disconnect", Qt::QueuedConnection);
+                return;
+            }
+
     LOG_CAT_INFO("Engine","communicationengine::disconnect");
 
     // Сбрасываем активный диалог
@@ -185,6 +198,14 @@ void communicationengine::disconnect() {
 }
 
 void communicationengine::executeCommand(TechCommand cmd, uint16_t address) {
+
+    if (QThread::currentThread() != this->thread()) {
+                QMetaObject::invokeMethod(this, "executeCommand", Qt::QueuedConnection,
+                                                                    Q_ARG(TechCommand, cmd),
+                                                                   Q_ARG(uint16_t, address));
+                return;
+            }
+
     LOG_CAT_INFO("Engine",QString("communicationengine::executeCommand: команда=%1, адрес=%2")
                  .arg(static_cast<int>(cmd)).arg(address, 4, 16, QChar('0')));
 
@@ -206,21 +227,66 @@ void communicationengine::executeCommand(TechCommand cmd, uint16_t address) {
 }
 
 void communicationengine::sendFUTransmit(uint16_t address) {
+
+    if (QThread::currentThread() != this->thread()) {
+                QMetaObject::invokeMethod(this, "sendFUTransmit", Qt::QueuedConnection,
+                                                                     Q_ARG(uint16_t, address));
+                return;
+            }
+
     QByteArray packet = PacketBuilder::createFUTransmitRequest(address);
     sendPacketInternal(packet, "ФУ передача");
 }
 
-void communicationengine::sendFUReceive(uint16_t address, uint8_t period, const uint8_t fuData[3]) {
-    QByteArray packet;
-    if (fuData) {
-        packet = PacketBuilder::createFUReceiveRequest(address, period, fuData);
-    } else {
-        packet = PacketBuilder::createFUReceiveRequest(address, period);
+void communicationengine::sendFUReceiveImpl(uint16_t address, uint8_t period, const QByteArray& fuData)
+{
+    // Этот слот ВСЕГДА выполняется в потоке объекта, поэтому проверка не нужна
+    const uint8_t* dataPtr = nullptr;
+    uint8_t buffer[3];
+    if (fuData.size() >= 3) {
+        memcpy(buffer, fuData.constData(), 3);
+        dataPtr = buffer;
     }
-    sendPacketInternal(packet, "ФУ прием");
+    // Вызываем основной метод уже в правильном потоке
+    sendFUReceive(address, period, dataPtr);
 }
 
+void communicationengine::sendFUReceive(uint16_t address, uint8_t period, const uint8_t fuData[3])
+    {
+        // Если вызов пришёл не из нашего потока – перенаправляем в поток объекта
+        if (QThread::currentThread() != this->thread()) {
+            QByteArray dataCopy;
+            if (fuData) {
+                dataCopy = QByteArray(reinterpret_cast<const char*>(fuData), 3);
+            }
+            // Вызываем приватный слот в целевом потоке
+            QMetaObject::invokeMethod(this, "sendFUReceiveImpl", Qt::QueuedConnection,
+                                      Q_ARG(uint16_t, address),
+                                      Q_ARG(uint8_t, period),
+                                      Q_ARG(QByteArray, dataCopy));
+            return;
+        }
+
+        // Здесь мы уже в правильном потоке – выполняем реальную отправку
+        QByteArray packet;
+        if (fuData) {
+            packet = PacketBuilder::createFUReceiveRequest(address, period, fuData);
+        } else {
+            packet = PacketBuilder::createFUReceiveRequest(address, period);
+        }
+        sendPacketInternal(packet, "ФУ прием");
+    }
+
 void communicationengine::setCommandParseResult(uint16_t address, bool success, const QString& message) {
+
+    if (QThread::currentThread() != this->thread()) {
+                QMetaObject::invokeMethod(this, "setCommandParseResult", Qt::QueuedConnection,
+                                                                    Q_ARG(uint16_t, address),
+                                                                    Q_ARG(bool, success),
+                                                                    Q_ARG(QString, message));
+                return;
+            }
+
     PPBContext* context = getContext(address);
     if (!context) {
         LOG_CAT_WARNING("Engine",QString("setCommandParseResult: нет контекста для адреса 0x%1")
@@ -238,6 +304,14 @@ void communicationengine::setCommandParseResult(uint16_t address, bool success, 
 }
 
 void communicationengine::setCommandParseData(uint16_t address, const QVariant& data) {
+
+    if (QThread::currentThread() != this->thread()) {
+                QMetaObject::invokeMethod(this, "setCommandParseData", Qt::QueuedConnection,
+                                                                     Q_ARG(uint16_t, address),
+                                                                     Q_ARG(QVariant, data));
+                return;
+            }
+
     PPBContext* context = getContext(address);
     if (!context) {
         LOG_CAT_WARNING("Engine",QString("setCommandParseData: нет контекста для адреса 0x%1")
@@ -301,11 +375,10 @@ void communicationengine::executeCommandImmediately(uint16_t address, std::uniqu
     sendPacketInternal(request, context->currentCommand->name());
 
     // Настраиваем таймер
-    context->operationTimer = new QTimer(this);
+    context->operationTimer = std::make_unique<QTimer>();
     context->operationTimer->setSingleShot(true);
-    connect(context->operationTimer, &QTimer::timeout,
+    connect(context->operationTimer.get(), &QTimer::timeout,
             this, [this, address]() { onOperationTimeout(address); });
-
     context->operationTimer->start(context->currentCommand->timeoutMs());
 
     LOG_CAT_INFO("Engine",QString("Выполняется %1 для 0x%2 (таймаут: %3 мс)")
@@ -423,8 +496,8 @@ void communicationengine::onOperationTimeout(uint16_t address) {
     }
 
     LOG_CAT_WARNING("Engine",QString("Таймаут для %1 (0x%2)")
-                    .arg(context->currentCommand->name())
-                    .arg(address, 4, 16, QChar('0')));
+                                  .arg(context->currentCommand->name())
+                                  .arg(address, 4, 16, QChar('0')));
 
     {
         QMutexLocker locker(&m_activeDataMutex);
@@ -433,23 +506,15 @@ void communicationengine::onOperationTimeout(uint16_t address) {
             m_waitingForData = false;
         }
     }
+
     // Проверяем, получили ли мы часть данных
     if (context->packetsReceived > 0) {
-        // Были получены частичные данные - даем команде их обработать
+        // Были получены частичные данные
         QString partialMessage = QString("Таймаут операции. Получено %1 из %2 пакетов")
                                      .arg(context->packetsReceived)
                                      .arg(context->packetsExpected);
 
-        // Вызываем обработку частичных данных
-        if (!context->receivedData.isEmpty() && m_commandInterface) {
-            try {
-                context->currentCommand->onDataReceived(m_commandInterface, context->receivedData);
-            } catch (...) {
-                // Игнорируем исключения при обработке частичных данных
-            }
-        }
-
-        completeOperation(address, false, partialMessage);
+        completeOperation(address, true, partialMessage);
     } else {
         // Данных не было совсем
         completeOperation(address, false, "Таймаут операции");
@@ -457,6 +522,14 @@ void communicationengine::onOperationTimeout(uint16_t address) {
 }
 
 void communicationengine::sendPacketInternal(const QByteArray& packet, const QString& description) {
+
+    if (QThread::currentThread() != this->thread()) {
+                QMetaObject::invokeMethod(this, "sendPacketInternal", Qt::QueuedConnection,
+                                                                     Q_ARG(QByteArray, packet),
+                                                                     Q_ARG(QString, description));
+                return;
+            }
+
     if (!m_udpClient) {
         emit errorOccurred("UDPClient не инициализирован");
         return;
@@ -488,23 +561,18 @@ void communicationengine::processPPBResponse(const PPBResponse& response) {
 
     if (response.status == 0x00) { // OK
         LOG_CAT_INFO("Engine",QString("OK от 0x%1 для %2")
-                     .arg(address, 4, 16, QChar('0'))
-                     .arg(context->currentCommand->name()));
+                                   .arg(address, 4, 16, QChar('0'))
+                                   .arg(context->currentCommand->name()));
 
         // Вызываем логику команды для обработки OK
         context->currentCommand->onOkReceived(m_commandInterface, address);
 
         // +++ ОБРАБОТКА TS ОТДЕЛЬНО +++
         if (context->currentCommand->commandId() == TechCommand::TS) {
-            // Для TS: завершаем операцию (переходим в Ready), но затем ждем данные статуса
-
             // Определяем, было ли это подключение (из Idle) или опрос (из Ready)
             bool wasIdle = (context->stateBeforeCommand == PPBState::Idle);
 
-            // Завершаем операцию (переходим в Ready)
-            completeOperation(address, true, wasIdle ? "Подключено" : "Опрос состояния");
-
-            // Но TS ожидает данные статуса (9 пакетов) - устанавливаем активный диалог
+            // Устанавливаем активный диалог для приема данных статуса
             {
                 QMutexLocker locker(&m_activeDataMutex);
                 m_activeDataAddress = address;
@@ -512,14 +580,18 @@ void communicationengine::processPPBResponse(const PPBResponse& response) {
             }
 
             LOG_CAT_INFO("Engine",QString("TS: ожидание %1 пакетов статуса для адреса 0x%2")
-                         .arg(context->currentCommand->expectedResponsePackets())
-                         .arg(address, 4, 16, QChar('0')));
+                                       .arg(context->currentCommand->expectedResponsePackets())
+                                       .arg(address, 4, 16, QChar('0')));
 
             // Настраиваем контекст для приема данных статуса
             context->waitingForOk = false;
             context->packetsExpected = context->currentCommand->expectedResponsePackets();
             context->packetsReceived = 0;
             context->receivedData.clear();
+
+            // Переходим в состояние ожидания данных
+            transitionState(address, PPBState::WaitingData,
+                            wasIdle ? "Подключение: ожидание статуса" : "Опрос состояния: ожидание данных");
 
             // Перезапускаем таймер для ожидания данных статуса
             if (context->operationTimer) {
@@ -536,7 +608,7 @@ void communicationengine::processPPBResponse(const PPBResponse& response) {
             }
 
             LOG_CAT_INFO("Engine",QString("Установлен активный диалог с данными для адреса 0x%1")
-                         .arg(address, 4, 16, QChar('0')));
+                                       .arg(address, 4, 16, QChar('0')));
 
             // Команда ожидает данные
             context->waitingForOk = false;
@@ -559,8 +631,8 @@ void communicationengine::processPPBResponse(const PPBResponse& response) {
         }
     } else { // ОШИБКА от ППБ
         LOG_CAT_ERROR("Engine",QString("Ошибка ППБ 0x%1: статус=0x%2")
-                      .arg(address, 4, 16, QChar('0'))
-                      .arg(response.status, 2, 16, QChar('0')));
+                                    .arg(address, 4, 16, QChar('0'))
+                                    .arg(response.status, 2, 16, QChar('0')));
 
         // Если это был активный диалог - сбрасываем
         {
@@ -611,7 +683,7 @@ void communicationengine::processDataPacket(const DataPacket& packet) {
 
     // Проверяем, что контекст все еще существует
     {
-        QMutexLocker locker(&m_contextsMutex);
+        //QMutexLocker locker(&m_contextsMutex);
         if (m_contexts.find(activeAddress) == m_contexts.end()) {
             LOG_CAT_WARNING("Engine",QString("Контекст для адреса 0x%1 уже удален, игнорируем пакет")
                             .arg(activeAddress, 4, 16, QChar('0')));
@@ -727,14 +799,14 @@ void communicationengine::completeOperation(uint16_t address, bool success, cons
     PPBContext* context = getContext(address);
     if (!context) {
         LOG_CAT_WARNING("Engine",QString("Нет контекста для завершения операции для 0x%1")
-                        .arg(address, 4, 16, QChar('0')));
+                                      .arg(address, 4, 16, QChar('0')));
         return;
     }
 
     // Проверяем, не завершена ли уже операция
     if (context->operationCompleted) {
         LOG_CAT_DEBUG("Engine",QString("Операция уже завершена для 0x%1, игнорируем")
-                      .arg(address, 4, 16, QChar('0')));
+                                    .arg(address, 4, 16, QChar('0')));
         return;
     }
 
@@ -763,18 +835,18 @@ void communicationengine::completeOperation(uint16_t address, bool success, cons
     // Если команда предоставила результат парсинга - используем его
     if (!context->parsedMessage.isEmpty()) {
         finalMessage = context->parsedMessage;
-        finalSuccess = context->parsedSuccess && success; // Учитываем и успех операции, и успех парсинга
+        finalSuccess = context->parsedSuccess && success;
 
         LOG_CAT_DEBUG("Engine",QString("Используем результат парсинга команды: успех=%1, сообщение='%2'")
-                      .arg(context->parsedSuccess)
-                      .arg(context->parsedMessage));
+                                    .arg(context->parsedSuccess)
+                                    .arg(context->parsedMessage));
     }
 
     // Логируем завершение
     LOG_CAT_INFO("Engine",QString("Завершение операции для 0x%1: %2 - %3")
-                 .arg(address, 4, 16, QChar('0'))
-                 .arg(finalSuccess ? "УСПЕХ" : "ОШИБКА")
-                 .arg(finalMessage));
+                               .arg(address, 4, 16, QChar('0'))
+                               .arg(finalSuccess ? "УСПЕХ" : "ОШИБКА")
+                               .arg(finalMessage));
 
     // ===== ВЫЗОВ ОБРАБОТКИ ДАННЫХ КОМАНДОЙ =====
     // Если есть необработанные данные и команда - обрабатываем их
@@ -782,10 +854,10 @@ void communicationengine::completeOperation(uint16_t address, bool success, cons
     // результаты парсинга через CommandInterface
     if (!context->receivedData.isEmpty() && context->currentCommand && m_commandInterface) {
         LOG_CAT_DEBUG("Engine",QString("Вызываем onDataReceived команды для обработки %1 пакетов")
-                      .arg(context->receivedData.size()));
+                                    .arg(context->receivedData.size()));
         if (m_commandInterface) {
             try {
-        context->currentCommand->onDataReceived(m_commandInterface, context->receivedData);
+                context->currentCommand->onDataReceived(m_commandInterface, context->receivedData);
             } catch (const std::exception& e) {
                 LOG_CAT_ERROR("Engine",QString("Исключение в onDataReceived: %1").arg(e.what()));
             } catch (...) {
@@ -818,8 +890,8 @@ void communicationengine::completeOperation(uint16_t address, bool success, cons
                 // Любая другая ошибка (включая TS из Ready) → Ready
                 nextState = PPBState::Ready;
                 LOG_CAT_WARNING("Engine",QString("Ошибка команды %1: %2. Остаемся в Ready")
-                                .arg(context->currentCommand->name())
-                                .arg(finalMessage));
+                                              .arg(context->currentCommand->name())
+                                              .arg(finalMessage));
             }
         } else {
             // Нет команды в контексте → Idle (на всякий случай)
@@ -827,14 +899,12 @@ void communicationengine::completeOperation(uint16_t address, bool success, cons
         }
     }
 
-
-
     // ===== ОТПРАВКА СИГНАЛОВ =====
     // Отправляем сигнал о завершении команды
     if (context->currentCommand) {
         emit commandCompleted(finalSuccess, finalMessage, context->currentCommand->commandId());
     } else {
-        emit commandCompleted(finalSuccess, finalMessage, TechCommand::TS); // Дефолтная команда
+        emit commandCompleted(finalSuccess, finalMessage, TechCommand::TS);
     }
 
     // Отправляем сигнал с распарсенными данными, если они есть
@@ -849,7 +919,7 @@ void communicationengine::completeOperation(uint16_t address, bool success, cons
 
     // ===== ОЧИСТКА КОНТЕКСТА =====
     // Не очищаем контекст полностью, только поля парсинга для следующей операции
-    context->clearParseResults();
+   // context->clearParseResults();
 }
 
 void communicationengine::processNextCommandForAddress(uint16_t address) {

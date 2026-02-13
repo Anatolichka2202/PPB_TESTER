@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QVariant>
 
-
+#include "../logging/logging_unified.h"
 UDPClient::UDPClient(QObject* parent)
     : QObject(parent)
     , m_socket(nullptr)
@@ -96,7 +96,7 @@ bool UDPClient::bind(quint16 port)
     LOG_CAT_INFO("UDP","::bind - попытка привязки к порту " + QString::number(port));
 
     // Пробуем привязаться
-    if (m_socket->bind(QHostAddress::Any, port, QUdpSocket::ReuseAddressHint)) {
+    if (m_socket->bind(QHostAddress::AnyIPv4, port)) {
         m_isBound = true;
         m_boundPort = m_socket->localPort();
         m_boundAddress = m_socket->localAddress();
@@ -236,6 +236,7 @@ void UDPClient::readPendingDatagrams()
         if (datagram.isValid()) {
             QByteArray data = datagram.data();
             QHostAddress sender = datagram.senderAddress();
+            std::swap(data[0],data[1]);
             quint16 port = datagram.senderPort();
 
             LOG_CAT_DEBUG("UDP",QString("UDPClient получено %1 байт от %2:%3")

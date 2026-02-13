@@ -1,0 +1,19 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/logging">
+        <!-- CSS стили -->
+        <file>styles/logstyles.css</file>
+        <file>styles/tablestyles.css</file>
+        <file>styles/cardstyles.css</file>
+        <file>styles/progressstyles.css</file>
+        <file>styles/console.css</file>
+        
+        <!-- HTML шаблоны -->
+        <file>templates/log_entry.html</file>
+        <file>templates/table.html</file>
+        <file>templates/card.html</file>
+        <file>templates/progress.html</file>
+        <file>templates/keyvalue.html</file>
+        <file>templates/rawdata.html</file>
+    </qresource>
+</RCC>

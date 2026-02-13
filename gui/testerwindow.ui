@@ -125,46 +125,6 @@
           <string>Параметры генератора (АКИП)</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Длительность импульса(мкс):</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLineEdit" name="lineEditPulseDuration">
-            <property name="maximumSize">
-             <size>
-              <width>100</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>27000</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Скважность:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
-           <widget class="QLineEdit" name="lineEditPulseDelay">
-            <property name="maximumSize">
-             <size>
-              <width>100</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="3">
            <widget class="QLineEdit" name="lineEditDutyCycle">
             <property name="maximumSize">
@@ -178,21 +138,21 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_4">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_kf">
             <property name="text">
-             <string>Задержка импульса(мкс):</string>
+             <string>Скважность:</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_5">
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="label_uot_chA_Mhz">
             <property name="text">
-             <string>Частота</string>
+             <string>Выходная частота канала А, МГц</string>
             </property>
            </widget>
           </item>
-          <item row="4" column="0" colspan="4">
+          <item row="5" column="0" colspan="4">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
              <widget class="QPushButton" name="pushButtonApplyToPPB1">
@@ -209,16 +169,39 @@
             </item>
            </layout>
           </item>
-          <item row="3" column="3">
-           <widget class="QLineEdit" name="lineEdit">
+          <item row="4" column="3">
+           <widget class="QLineEdit" name="lineEditOutChAMhz">
             <property name="maximumSize">
              <size>
               <width>100</width>
               <height>16777215</height>
              </size>
             </property>
+            <property name="text">
+             <string>0</string>
+            </property>
             <property name="cursorPosition">
-             <number>0</number>
+             <number>1</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_powerDbm">
+            <property name="text">
+             <string>Мощность, дБм</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLineEdit" name="lineEditPowerDbm">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -234,37 +217,63 @@
           </size>
          </property>
          <property name="title">
-          <string>Режим ФУ</string>
+          <string>Режим и параметры  ФУ</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_6">
-          <item row="1" column="1">
-           <widget class="QCheckBox" name="checkBoxDelayed">
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="lineEditPulseDuration">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
-             <string>С задержкой 50мкс</string>
+             <string>27000</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="2" column="1">
            <widget class="QRadioButton" name="radioButtonFUTransmit">
             <property name="text">
              <string>ФУ передача</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QCheckBox" name="checkBoxInstant">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_impulse">
             <property name="text">
-             <string>Мгновенное переключение</string>
+             <string>Длительность импульса(мкс):</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
+          <item row="2" column="0">
            <widget class="QRadioButton" name="radioButtonFUReceive">
             <property name="text">
              <string>ФУ прием</string>
             </property>
             <property name="checked">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_PulseDelay">
+            <property name="text">
+             <string>Задержка импульса(мкс):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEditPulseDelay">
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -419,6 +428,13 @@ background-color: #ff0000;
         <widget class="QPushButton" name="pult_active">
          <property name="text">
           <string>Включить пульт</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="akip_pult">
+         <property name="text">
+          <string>AKIP PULT</string>
          </property>
         </widget>
        </item>

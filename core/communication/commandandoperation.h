@@ -8,7 +8,8 @@
 #include "packetbuilder.h"
 #include "commandinterface.h"
 #include <QTimer>
-#include "../logwrapper.h"
+
+#include "../logging/logging_unified.h"
 namespace PPBConstants {
 constexpr int OPERATION_TIMEOUT_MS = 5000;    // Таймаут операции 5 сек
 constexpr int PACKET_TIMEOUT_MS = 1000;       // Таймаут между пакетами 1 сек

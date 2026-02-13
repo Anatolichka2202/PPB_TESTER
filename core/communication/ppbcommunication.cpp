@@ -6,6 +6,7 @@
 #include <QThread>
 
 
+#include "../logging/logging_unified.h"
 // ===== РЕАЛИЗАЦИЯ =====
 PPBCommunication::PPBCommunication(QObject* parent)
     : CommandInterface(parent)
@@ -158,9 +159,11 @@ void PPBCommunication::sendFUReceive(uint16_t address, uint8_t period, const uin
     LOG_CAT_INFO("PPBcom",QString("PPBCommunication::sendFUReceive (фасад): address=0x%1, period=%2")
                  .arg(address, 4, 16, QChar('0')).arg(period));
 
-    if (m_engine) {
-        m_engine->sendFUReceive(address, period, fuData);
+       if (m_engine) {
+                m_engine->sendFUReceive(address, period, fuData);
+
     } else {
+
         LOG_CAT_ERROR("PPBcom","communicationengine не инициализирован");
         emit errorOccurred("Движок обработки команд не инициализирован");
     }
@@ -205,7 +208,6 @@ void PPBCommunication::sendDataPackets(const QVector<DataPacket>& packets) {
 
     // Отправляем через движок
     if (m_engine) {
-        // Здесь нужно реализовать метод в движке для отправки массива пакетов
         // Пока отправляем по одному
         for (const DataPacket& packet : packets) {
             QByteArray data(reinterpret_cast<const char*>(&packet), sizeof(DataPacket));
@@ -216,6 +218,27 @@ void PPBCommunication::sendDataPackets(const QVector<DataPacket>& packets) {
 
 QVector<DataPacket> PPBCommunication::getGeneratedPackets() const {
     return m_generatedPackets;
+}
+
+void PPBCommunication::notifySentPackets(const QVector<DataPacket>& packets) {
+    LOG_CAT_INFO("PPBcom", QString("Уведомление о %1 отправленных пакетах").arg(packets.size()));
+
+    // Отправляем сигнал в контроллер (главный поток)
+    emit sentPacketsSaved(packets);
+
+    // Также очищаем старые полученные пакеты (новая последовательность)
+    emit clearPacketDataRequested();
+}
+
+void PPBCommunication::notifyReceivedPackets(const QVector<DataPacket>& packets) {
+    LOG_CAT_INFO("PPBcom", QString("Уведомление о %1 полученных пакетах").arg(packets.size()));
+
+    // Отправляем сигнал в контроллер
+    emit receivedPacketsSaved(packets);
+}
+
+void PPBCommunication::requestClearPacketData() {
+    emit clearPacketDataRequested();
 }
 
 // ===== СЛОТЫ ДЛЯ ОБРАБОТКИ СИГНАЛОВ ОТ ДВИЖКА =====
@@ -284,15 +307,23 @@ void PPBCommunication::setError(const QString& error)
 void PPBCommunication::enqueueCommand(TechCommand cmd, uint16_t address)
 {
     CommandTask task{cmd, address, QDateTime::currentDateTime()};
+    {
+        QMutexLocker locker(&m_taskMutex);
+
     m_taskQueue.enqueue(task);
 
     if (!m_processingTask) {
         m_taskTimer->start();
     }
+    }
 }
 
 void PPBCommunication::processNextTask()
 {
+    CommandTask task;
+    {
+        QMutexLocker locker(&m_taskMutex);
+
     if (m_taskQueue.isEmpty()) {
         m_processingTask = false;
         m_taskTimer->stop();
@@ -303,7 +334,8 @@ void PPBCommunication::processNextTask()
     m_processingTask = true;
     emit busyChange(true);
 
-    CommandTask task = m_taskQueue.dequeue();
+     task = m_taskQueue.dequeue();
+    }
     executeCommand(task.cmd, task.address);
 }
 
@@ -314,7 +346,7 @@ void PPBCommunication::setParseResult(bool success, const QString& message) {
 
     if (m_engine) {
         // Передаем результат парсинга в движок
-        // Нужно будет добавить соответствующий метод в communicationengine
+
         m_engine->setCommandParseResult(m_currentAddress, success, message);
     } else {
         LOG_CAT_WARNING("PPBcom","setParseResult: движок не инициализирован");
@@ -339,7 +371,7 @@ void PPBCommunication::stop()
 
     // Останавливаем движок
     if (m_engine) {
-        m_engine->disconnect();
+        QMetaObject::invokeMethod(m_engine.get(), "disconnect", Qt::QueuedConnection);
     }
 
     // Останавливаем таймер

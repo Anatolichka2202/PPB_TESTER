@@ -1,0 +1,262 @@
+/* ==================== СТИЛИ ДЛЯ КОНСОЛИ ОТЛАДКИ ==================== */
+
+/* Окно консоли */
+.debug-console {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Заголовок консоли */
+.console-header {
+    background: #252526;
+    padding: 12px 16px;
+    border-bottom: 1px solid #3e3e42;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.console-title {
+    font-weight: 600;
+    color: #fff;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.console-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.console-btn {
+    background: #3e3e42;
+    border: none;
+    color: #d4d4d4;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.2s;
+}
+
+.console-btn:hover {
+    background: #505054;
+}
+
+.console-btn.danger {
+    background: #f14c4c;
+    color: white;
+}
+
+.console-btn.danger:hover {
+    background: #ff5c5c;
+}
+
+/* Панель управления */
+.console-controls {
+    background: #2d2d30;
+    padding: 10px 16px;
+    border-bottom: 1px solid #3e3e42;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.control-label {
+    font-size: 11px;
+    color: #858585;
+}
+
+.control-select, .control-input {
+    background: #3e3e42;
+    border: 1px solid #3e3e42;
+    color: #d4d4d4;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    min-width: 100px;
+}
+
+.control-input {
+    flex: 1;
+    max-width: 200px;
+}
+
+.control-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+/* Область вывода логов */
+.console-output {
+    background: #1e1e1e;
+    padding: 8px;
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+.console-line {
+    padding: 4px 8px;
+    border-bottom: 1px solid #2d2d30;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.console-line:hover {
+    background: #2d2d30;
+}
+
+/* Цвета для уровней логов в консоли */
+.console-line.debug {
+    color: #6a9955;
+}
+
+.console-line.info {
+    color: #9cdcfe;
+}
+
+.console-line.warning {
+    color: #dcdcaa;
+    background: rgba(220, 220, 170, 0.1);
+}
+
+.console-line.error {
+    color: #f48771;
+    background: rgba(244, 135, 113, 0.1);
+}
+
+.console-line.critical {
+    color: #f14c4c;
+    background: rgba(241, 76, 76, 0.15);
+    font-weight: bold;
+}
+
+/* Время и категория в консоли */
+.console-time {
+    color: #858585;
+    margin-right: 8px;
+    font-size: 10px;
+}
+
+.console-category {
+    color: #c586c0;
+    margin-right: 8px;
+    font-weight: 600;
+    font-size: 10px;
+}
+
+/* HEX дамп в консоли */
+.console-hexdump {
+    margin: 8px 0 8px 20px;
+    font-family: 'Consolas', monospace;
+    font-size: 10px;
+    color: #ce9178;
+}
+
+.hex-offset {
+    color: #569cd6;
+    margin-right: 8px;
+}
+
+.hex-data {
+    color: #dcdcaa;
+    margin-right: 16px;
+}
+
+.hex-ascii {
+    color: #6a9955;
+}
+
+/* Подсветка синтаксиса */
+.console-keyword {
+    color: #569cd6;
+    font-weight: bold;
+}
+
+.console-string {
+    color: #ce9178;
+}
+
+.console-number {
+    color: #b5cea8;
+}
+
+.console-comment {
+    color: #6a9955;
+    font-style: italic;
+}
+
+.console-function {
+    color: #dcdcaa;
+}
+
+/* Полоса прокрутки в консоли */
+.console-output::-webkit-scrollbar {
+    width: 10px;
+}
+
+.console-output::-webkit-scrollbar-track {
+    background: #2d2d30;
+}
+
+.console-output::-webkit-scrollbar-thumb {
+    background: #3e3e42;
+    border-radius: 5px;
+}
+
+.console-output::-webkit-scrollbar-thumb:hover {
+    background: #505054;
+}
+
+/* Анимации */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.console-line.new {
+    animation: blink 0.5s 2;
+}
+
+/* Адаптивность консоли */
+@media (max-width: 768px) {
+    .debug-console {
+        border-radius: 0;
+    }
+    
+    .console-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .control-group {
+        flex: 1;
+    }
+    
+    .control-input {
+        max-width: none;
+    }
+    
+    .console-line {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+}

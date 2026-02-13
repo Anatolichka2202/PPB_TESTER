@@ -1,13 +1,16 @@
 // main.cpp
 #include "gui/testerwindow.h"
 #include <QApplication>
+#include <QDir>
+#include <QResource>
 #include "core/applicationmanager.h"
 #include "core/logwrapper.h"
 #include <QMessageBox>
 #include <windows.h>
 #include <QFile>
 #include <iostream>
-LONG WINAPI MyUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* exceptionInfo)
+
+/*LONG WINAPI MyUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* exceptionInfo)
 {
     QString errorMsg;
 
@@ -54,12 +57,12 @@ LONG WINAPI MyUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* exceptionInfo
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
-
+*/
 
 int main(int argc, char *argv[])
 {
     // Установка обработчика необработанных исключений для Windows
-    SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
+   // SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
 
     QApplication a(argc, argv);
 

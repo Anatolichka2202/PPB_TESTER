@@ -1,0 +1,43 @@
+/* Простые карточки */
+.log-card {
+    margin: 8px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-title {
+    font-size: 12pt;
+    font-weight: bold;
+    flex: 1;
+}
+
+.card-content {
+    margin: 6px 0;
+}
+
+.card-field {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    padding: 3px 0;
+}
+
+.card-key {
+    font-weight: 500;
+    color: #666;
+}
+
+.card-value {
+    font-weight: bold;
+    color: #333;
+}

@@ -1,5 +1,6 @@
 #include "commandandoperation.h"
-#include "../logwrapper.h"
+
+#include "../logging/logging_unified.h"
 #include <QDataStream>
 #include <QtEndian>
 
@@ -93,14 +94,16 @@ void StatusCommand::onDataReceived(CommandInterface* comm, const QVector<QByteAr
         // Устанавливаем результат парсинга
         comm->setParseResult(true, message);
         comm->setParseData(parsedData);
+
+        // Отправляем сырые данные для UI
+        emit comm->statusDataReady(data);
+
+        // Команда TS успешно выполнена только после получения всех пакетов
+        // Завершение операции будет вызвано в communicationengine::completeOperation()
     } else {
         comm->setParseResult(false, "Ошибка парсинга статуса");
     }
-
-    // Отправляем сырые данные для UI
-    emit comm->statusDataReady(data);
 }
-
 // VERS
 bool VersCommand::parseResponseData(const QVector<QByteArray>& data,
                                     QString& outMessage,
@@ -330,9 +333,13 @@ void PRBS_M2SCommand::onOkReceived(CommandInterface* comm, uint16_t address) con
         // LFSR сдвиг
         lfsr = (lfsr >> 1) | ((lfsr ^ (lfsr >> 1)) << 7);
     }
+    // Уведомляем о новых отправленных пакетах
+    comm->notifySentPackets(testPackets);
 
     // Отправляем пакеты
     comm->sendDataPackets(testPackets);
+
+
 }
 
 // ===== PRBS_S2MCommand =====
@@ -377,6 +384,9 @@ void PRBS_S2MCommand::onDataReceived(CommandInterface* comm, const QVector<QByte
             LOG_CAT_WARNING("Command",QString("Ошибка парсинга пакета %1").arg(receivedPackets.size() + parseErrors));
         }
     }
+
+    // Уведомляем о полученных пакетах
+    comm->notifyReceivedPackets(receivedPackets);
 
     // 2. Проверяем, получили ли мы все пакеты
     if (receivedPackets.size() != PPBConstants::TEST_PACKET_COUNT) {
