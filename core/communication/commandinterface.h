@@ -34,6 +34,11 @@ public:
     // Устанавливает дополнительные распарсенные данные
     virtual void setParseData(const QVariant& parsedData) = 0;
 
+    //  методы для уведомления о пакетах
+    virtual void notifySentPackets(const QVector<DataPacket>& packets) = 0;
+    virtual void notifyReceivedPackets(const QVector<DataPacket>& packets) = 0;
+    virtual void requestClearPacketData() = 0;
+
 signals:
     void statusDataReady(const QVector <QByteArray>& data);
     void testDataReady(const QVector<DataPacket>& data);

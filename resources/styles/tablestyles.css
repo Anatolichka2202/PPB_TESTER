@@ -1,0 +1,25 @@
+/* Простые таблицы */
+.log-table {
+    border-collapse: collapse;
+    margin: 8px 0;
+    width: 100%;
+}
+
+.log-table th {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.log-table td {
+    border: 1px solid #dee2e6;
+    padding: 5px 7px;
+    font-size: 10pt;
+}
+
+.log-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}

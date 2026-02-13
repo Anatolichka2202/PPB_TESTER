@@ -83,7 +83,8 @@ private:
         int packetsReceived = 0;
         bool waitingForOk = false;
         bool operationCompleted = false;
-        QTimer* operationTimer = nullptr;
+        // В PPBContext
+        std::unique_ptr<QTimer> operationTimer;
         //результаты парсинга от командды
 
         QString parsedMessage;           // Сообщение от команды
@@ -105,16 +106,14 @@ private:
             , packetsExpected(other.packetsExpected)
             , packetsReceived(other.packetsReceived)
             , waitingForOk(other.waitingForOk)
-            , operationTimer(other.operationTimer)
+            //, operationTimer(other.operationTimer)
         {
             other.operationTimer = nullptr;
         }
 
         PPBContext& operator=(PPBContext&& other) noexcept {
             if (this != &other) {
-                if (operationTimer) {
-                    delete operationTimer;
-                }
+
 
                 currentCommand = std::move(other.currentCommand);
                 receivedData = std::move(other.receivedData);
@@ -123,17 +122,14 @@ private:
                 packetsExpected = other.packetsExpected;
                 packetsReceived = other.packetsReceived;
                 waitingForOk = other.waitingForOk;
-                operationTimer = other.operationTimer;
+              //  operationTimer = other.operationTimer;
                 other.operationTimer = nullptr;
             }
             return *this;
         }
 
         ~PPBContext() {
-            if (operationTimer) {
-                operationTimer->stop();
-                delete operationTimer;
-            }
+            if (operationTimer) operationTimer->stop();
         }
 
         // Метод для сброса результатов парсинга
@@ -149,6 +145,10 @@ public:
     explicit communicationengine(UDPClient* udpClient, QObject* parent = nullptr);
     ~communicationengine();
 
+    void setCommandInterface(CommandInterface* cmdInterface) {
+        m_commandInterface = cmdInterface;
+    }
+public slots:
     // Основные методы
     bool connectToPPB(uint16_t address, const QString& ip, quint16 port);
     void disconnect();
@@ -159,17 +159,14 @@ public:
     void sendFUTransmit(uint16_t address);
     void sendFUReceive(uint16_t address, uint8_t period, const uint8_t fuData[3] = nullptr);
 
-public:
-    void setCommandInterface(CommandInterface* cmdInterface) {
-        m_commandInterface = cmdInterface;
-    }
+
     void sendPacketInternal(const QByteArray& packet, const QString& description);
 
     void setCommandParseResult(uint16_t address, bool success, const QString& message);
     void setCommandParseData(uint16_t address, const QVariant& data);
 
-public slots:
-   // void forceCompleteOperation(bool success, const QString& message);
+
+
 signals:
     void stateChanged(uint16_t address, PPBState state);
     void connected();
@@ -190,7 +187,7 @@ private slots:
     void onNetworkError(const QString& error);
     void onOperationTimeout(uint16_t address);
     void processCommandQueue();
-
+    void sendFUReceiveImpl(uint16_t address, uint8_t period, const QByteArray& fuData = QByteArray());
 private:
     void executeCommandImmediately(uint16_t address, std::unique_ptr<PPBCommand> command);
     void processPPBResponse(const PPBResponse& response);
@@ -211,11 +208,11 @@ private:
     UDPClient* m_udpClient;
     QTimer* m_queueTimer;
     QTimer* m_timeoutTimer;
-     std::unordered_map<uint16_t, PPBContext> m_contexts;
+  std::unordered_map<uint16_t, PPBContext> m_contexts;
 
 
 
-    QMutex m_contextsMutex;
+    //QMutex m_contextsMutex;
     uint16_t m_currentAddress;
     QString m_currentIP;
     quint16 m_currentPort;

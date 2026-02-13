@@ -7,7 +7,7 @@
 #include <QThread>
 #include <iostream>
 #include <atomic>
-
+#include "logging/logconfig.h"
 QMutex Logger::m_logMutex;
 QFile Logger::m_logFile;
 QString Logger::m_lastLog = "";
@@ -60,6 +60,16 @@ void Logger::init(UICallback uiCallback)
 void Logger::setUICallback(UICallback callback)
 {
     m_uiCallback = callback;
+}
+
+
+static LogLevel levelFromString(const QString& levelStr)
+{
+    if (levelStr == "DEBUG") return LOG_DEBUG;
+    if (levelStr == "INFO") return LOG_INFO;
+    if (levelStr == "WARNING") return LOG_WARNING;
+    if (levelStr == "ERROR") return LOG_ERROR;
+    return LOG_INFO; // значение по умолчанию
 }
 
 // Основной метод записи
@@ -152,53 +162,16 @@ void Logger::setShutdownMode(bool shutdown)
 
 void Logger::writeToUI(const LogEntry& entry)
 {
-    if (m_shutdown.load(std::memory_order_acquire)) {
-        // Режим завершения - пропускаем UI callback
+    // Быстрая проверка без блокировок
+    if (m_shutdown.load(std::memory_order_acquire) || !m_uiCallback) {
         return;
     }
 
-    if (!m_uiCallback) {
-        std::cerr << "Logger::writeToUI: no callback set" << std::endl;
-        return;
-    }
-
-    std::cerr << "Logger::writeToUI: thread = " << QThread::currentThread()
-              << ", app thread = " << QCoreApplication::instance()->thread() << std::endl;
-
-    // Проверяем, в каком потоке мы находимся
-    // Если не в главном потоке Qt, используем invokeMethod
-    if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
-        std::cerr << "Logger::writeToUI: NOT in main thread, using invokeMethod" << std::endl;
-        // Копируем entry для передачи через очередь
-        LogEntry entryCopy = entry;
-        try{
-        QMetaObject::invokeMethod(QCoreApplication::instance(),
-                                  [entryCopy]() {
-                                    std::cerr << "Logger::writeToUI: in invokeMethod lambda" << std::endl;
-                                      if (m_uiCallback) {
-                                          std::cerr << "Logger::writeToUI: calling callback" << std::endl;
-                                          m_uiCallback(entryCopy);
-                                          std::cerr << "Logger::writeToUI: callback completed" << std::endl;
-                                      }
-                                  }, Qt::QueuedConnection);
-        } catch(const std::exception& e)
-        {
-            std::cerr << "Logger::writeToUI: exception in invokeMethod: " << e.what() << std::endl;
-        } catch (...) {
-            std::cerr << "Logger::writeToUI: unknown exception in invokeMethod" << std::endl;
-        }
-
-        return;
-    }
-
-    // В главном потоке - вызываем напрямую
-    std::cerr << "Logger::writeToUI: in main thread, calling directly" << std::endl;
+    //ПРОСТОЙ ВЫЗОВ - без проверок потоков
+    // Пусть LogWrapper сам разбирается с потоками
     try {
         m_uiCallback(entry);
-        std::cerr << "Logger::writeToUI: direct callback completed" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Logger::writeToUI: exception in callback: " << e.what() << std::endl;
     } catch (...) {
-        std::cerr << "Logger::writeToUI: unknown exception in callback" << std::endl;
+        // Игнорируем исключения
     }
 }

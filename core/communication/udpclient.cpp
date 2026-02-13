@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QVariant>
 
-
+#include "../logging/logging_unified.h"
 UDPClient::UDPClient(QObject* parent)
     : QObject(parent)
     , m_socket(nullptr)
@@ -96,7 +96,8 @@ bool UDPClient::bind(quint16 port)
     LOG_CAT_INFO("UDP","::bind - попытка привязки к порту " + QString::number(port));
 
     // Пробуем привязаться
-    if (m_socket->bind(QHostAddress::Any, port, QUdpSocket::ReuseAddressHint)) {
+
+    if (m_socket->bind(QHostAddress("192.168.0.246"), port)) {//ping  -t QHostAddress::AnyIPv4
         m_isBound = true;
         m_boundPort = m_socket->localPort();
         m_boundAddress = m_socket->localAddress();

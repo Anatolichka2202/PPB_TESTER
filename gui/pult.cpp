@@ -1,6 +1,6 @@
 #include "pult.h"
 #include "ui_pult.h"
-#include "../core/logger.h"
+#include "../core/logging/logging_unified.h"
 #include <QTimer>
 pult::pult(uint16_t address, PPBController* controller, QWidget *parent)
     : QWidget(parent)
@@ -13,7 +13,7 @@ pult::pult(uint16_t address, PPBController* controller, QWidget *parent)
     setWindowTitle(QString("Пульт управления ППБ (адрес: %1)").arg(address));
 
     if (!m_controller) {
-        Logger::error("Пульт: передан нулевой контроллер");
+        LOG_UI_ALERT("Пульт: передан нулевой контроллер");
                 return;
     }
 
@@ -32,7 +32,15 @@ pult::pult(uint16_t address, PPBController* controller, QWidget *parent)
     connect(m_controller, &PPBController::operationCompleted,
             this, &pult::onControllerOperationCompleted);
 
-    Logger::info("Пульт инициализирован для адреса " + QString::number(address));
+
+    // Подключаем сигналы анализа
+    connect(m_controller, &PPBController::analysisStarted,
+            this, &pult::onAnalysisStarted);
+    connect(m_controller, &PPBController::analysisProgress,
+            this, &pult::onAnalysisProgress);
+    connect(m_controller, &PPBController::analysisComplete,
+            this, &pult::onAnalysisComplete);
+    LOG_UI("Пульт инициализирован для адреса " + QString::number(address));
 }
 
 pult::~pult()
@@ -129,7 +137,7 @@ void pult::on_BER_FCommand_clicked()
 void pult::onControllerLogMessage(const QString& message)
 {
     // Логируем сообщение
-    Logger::debug("Pult log: " + message);
+    LOG_UI_ALERT("Pult log: " + message);
 
     // Можно добавить вывод в отдельный виджет, если нужно
     // Например, в QTextEdit или QListWidget
@@ -139,7 +147,7 @@ void pult::onControllerErrorOccurred(const QString& error)
 {
     // Показываем ошибку пользователю
     QMessageBox::warning(this, "Ошибка", error);
-    Logger::error("Pult error: " + error);
+    LOG_UI("Pult error: " + error);
 
     // Обновляем статусную метку
     ui->statusbar->setText("Ошибка: " + error);
@@ -157,15 +165,46 @@ void pult::onControllerOperationCompleted(bool success, const QString& message)
     if (success) {
         ui->statusbar->setText("✓ " + message);
         ui->statusbar->setStyleSheet("color: green; font-weight: bold;");
-        Logger::info("Pult operation: " + message);
+        LOG_UI("Pult operation: " + message);
     } else {
         ui->statusbar->setText("✗ " + message);
         ui->statusbar->setStyleSheet("color: orange; font-weight: bold;");
-        Logger::warning("Pult operation failed: " + message);
+       LOG_UI("Pult operation failed: " + message);
     }
 
     // Очищаем статус через 3 секунды
     if (m_statusTimer) {
         m_statusTimer->start(3000);
+    }
+}
+
+
+
+void pult::on_AnalizeBttn_clicked()
+{
+    if (m_controller) {
+        m_controller->analize();
+    }
+}
+
+void pult::onAnalysisStarted() {
+    ui->statusbar->setText("📊 Анализ начат...");
+    ui->statusbar->setStyleSheet("color: blue; font-weight: bold;");
+}
+
+void pult::onAnalysisProgress(int percent) {
+    ui->statusbar->setText(QString("📊 Анализ: %1%").arg(percent));
+}
+
+void pult::onAnalysisComplete(const QString& summary, const QVariantMap& details) {
+    ui->statusbar->setText("✅ Анализ завершен");
+    ui->statusbar->setStyleSheet("color: green; font-weight: bold;");
+
+    // Можно показать диалог с результатами
+    QMessageBox::information(this, "Результаты анализа", summary);
+
+    // Очищаем статус через 5 секунд
+    if (m_statusTimer) {
+        m_statusTimer->start(5000);
     }
 }

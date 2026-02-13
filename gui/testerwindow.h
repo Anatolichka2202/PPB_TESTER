@@ -6,6 +6,8 @@
 #include "pult.h"
 #include <QGroupBox>
 #include "../core/logentry.h"
+#include <QTextBrowser>
+#include "../core/logging/loguimanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TesterWindow; }
@@ -86,6 +88,13 @@ private:
     QString formatTemperature(float celsius, bool showCodes) const;
     QString formatVSWR(float vswr, bool showCodes) const;
 
+    //подгрузка ресурсов
+    void loadLogStyles();
+    QString  loadResourceCSS(const QString& resourcePath);
+    QString  loadResourceTemplate(const QString& resourcePath);
+    void loadCSS();
+
+    void debugLogSystem();
 private:
     Ui::TesterWindow *ui;
     PPBController* m_controller;
@@ -95,6 +104,7 @@ private:
     bool m_isExiting;
 
      QVector<LogEntry> m_logEntries; // Храним логи для экспорта
+    LogUIManager* m_logUIManager;
 };
 
 #endif // TESTERWINDOW_H

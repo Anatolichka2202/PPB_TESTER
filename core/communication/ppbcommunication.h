@@ -57,6 +57,8 @@ public:
 
     void setParseResult(bool success, const QString& message) override;
     void setParseData(const QVariant& parsedData) override;
+
+
 public slots:
     // Инициализация (должна вызываться в потоке объекта)
     void initialize(UDPClient* udpClient);
@@ -71,6 +73,10 @@ public slots:
     void sendDataPackets(const QVector<DataPacket>& packets) override;
     QVector<DataPacket> getGeneratedPackets() const override;
 
+    //АНАЛИЗ
+    void notifySentPackets(const QVector<DataPacket>& packets) override;
+    void notifyReceivedPackets(const QVector<DataPacket>& packets) override;
+    void requestClearPacketData() override;
 signals:
     // Сигналы состояния
     void stateChanged(PPBState state);
@@ -96,6 +102,14 @@ signals:
     // Сигнал завершения инициализации
     void initialized();
 
+    //АНАЛИЗ
+    // Сигналы для передачи пакетов в контроллер
+    void sentPacketsSaved(const QVector<DataPacket>& packets);
+    void receivedPacketsSaved(const QVector<DataPacket>& packets);
+
+    // Сигнал для очистки данных
+    void clearPacketDataRequested();
+        //
 private slots:
     // Слоты для обработки событий от движка
     void onEngineStateChanged(uint16_t address, PPBState state);
@@ -139,6 +153,7 @@ private:
     // Очередь команд (для обратной совместимости)
     QQueue<CommandTask> m_taskQueue;
     bool m_processingTask;
+    mutable QMutex m_taskMutex;   // для защиты очереди
 
     // Таймер для обработки очереди (устаревшее)
     QTimer* m_taskTimer;

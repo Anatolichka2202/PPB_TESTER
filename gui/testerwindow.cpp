@@ -8,11 +8,12 @@
 #include <QDateTime>
 #include <QCloseEvent>
 #include <QThread>
-#include "../core/logwrapper.h"
+#include "../core/logging/logging_unified.h"
 TesterWindow::TesterWindow(PPBController* controller, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TesterWindow)
     , m_controller(controller) // Используем переданный контроллер
+    ,m_logUIManager(nullptr)
     , m_pultWindow(nullptr)
     , m_displayAsCodes(false)
     , m_currentPPBIndex(0)
@@ -24,7 +25,9 @@ TesterWindow::TesterWindow(PPBController* controller, QWidget *parent)
 
     ui->setupUi(this);
 
-    setupLogging();
+    QTimer::singleShot(100, this, [this]() {
+        setupLogging();
+    });
 
  QTimer::singleShot(0, this, [this]() {
         if (!m_controller) {
@@ -36,17 +39,13 @@ TesterWindow::TesterWindow(PPBController* controller, QWidget *parent)
 
     //LogWrapper::instance();
 
-    if (!m_controller) {
-        LOG_ERROR("TesterWindow: контроллер не передан!");
-        QMessageBox::critical(this, "Ошибка",
-                              "Контроллер не инициализирован. Приложение будет закрыто.");
-        return;
-    }
 
     initializeUI();
     connectSignals();
     updateConnectionUI();
     updateControlsState();
+
+
 
     LOG_CAT_INFO("UI", "Программа управления ППБ запущена");
     });
@@ -61,152 +60,163 @@ TesterWindow::~TesterWindow()
     delete ui;
 }
 
+
+
+
 void TesterWindow::setupLogging()
 {
-    // Подключаемся к сигналу LogWrapper
-    connect(LogWrapper::instance(), &LogWrapper::logEntryReceived,
-            this, &TesterWindow::onLogEntryReceived, Qt::QueuedConnection);
+    // Загружаем стили ПЕРЕД созданием LogUIManager
+    loadLogStyles();
 
-    // Настраиваем QTextBrowser для отображения HTML
-    ui->textBrowser->setOpenExternalLinks(false);
-    ui->textBrowser->setReadOnly(true);
+    // Создаем менеджер UI логов
+    m_logUIManager = new LogUIManager(this);
 
-    // Добавляем CSS стили
-    QString css = R"(
-        .log-entry {
-            padding: 2px 5px;
-            margin: 1px 0;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 10pt;
-            white-space: pre;
+    // Устанавливаем только комбобокс уровня (категории теперь фиксированы)
+    m_logUIManager->setupLevelComboBox(ui->comboBoxLogLevel);
+
+    // Подключаемся к сигналу от LogWrapper
+    // Используем прямое соединение, так как оба в главном потоке
+    QObject::connect(LogWrapper::instance(), &LogWrapper::logEntryReceived,
+                     this, &TesterWindow::onLogEntryReceived);
+
+    // Логируем начало работы
+    LOG_UI_STATUS("TesterWindow: инициализация интерфейса");
+
+    // Простой HTML тест
+    QString testHtml = "<div style='color: red; font-weight: bold;'>"
+                       "ТЕСТ: Если вы это видите, то HTML работает!</div>";
+    ui->textBrowser->append(testHtml);
+
+    // Тест через систему логирования
+    LOG_UI_STATUS("Тестовое сообщение через LOG_UI_STATUS");
+    LOG_CAT_INFO("UI_STATUS", "Тестовое сообщение через LOG_CAT_INFO");
+    LOG_INFO("Тестовое сообщение через LOG_INFO");
+}
+
+void TesterWindow::loadCSS()
+{
+    QString css;
+
+    // Основные стили логов
+    QFile logCss(":/logging/styles/logstyles.css");
+    if (logCss.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        css += QString::fromUtf8(logCss.readAll()) + "\n";
+        logCss.close();
+    }
+
+    // Стили для таблиц
+    QFile tableCss(":/logging/styles/tablestyles.css");
+    if (tableCss.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        css += QString::fromUtf8(tableCss.readAll()) + "\n";
+        tableCss.close();
+    }
+
+    // Стили для карточек
+    QFile cardCss(":/logging/styles/cardstyles.css");
+    if (cardCss.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        css += QString::fromUtf8(cardCss.readAll()) + "\n";
+        cardCss.close();
+    }
+
+    // Устанавливаем стили
+    if (!css.isEmpty()) {
+        ui->textBrowser->document()->setDefaultStyleSheet(css);
+    }
+}
+
+
+    void TesterWindow::loadLogStyles()
+{
+    QString css;
+
+    // Только основные стили
+    QString logCss = loadResourceCSS(":/logging/styles/logstyles.css");
+    if (!logCss.isEmpty()) {
+        css = logCss;
+    }
+
+    // Устанавливаем стили
+    if (!css.isEmpty()) {
+        ui->textBrowser->document()->setDefaultStyleSheet(css);
+        qDebug() << "CSS стили установлены (упрощенные)";
+    }
+
+    // Простой начальный контент
+    ui->textBrowser->setHtml(
+        "<div class='log-entry log-level-info'>"
+        "<span class='log-time'>" + QDateTime::currentDateTime().toString("hh:mm:ss") + "</span>"
+                                                              "<span class='log-level'>[INFO]</span>"
+                                                              "<span class='log-message'>Логирование инициализировано</span>"
+                                                              "</div>"
+        );
+}
+QString TesterWindow::loadResourceCSS(const QString& resourcePath)
+{
+    QFile cssFile(resourcePath);
+    if (cssFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QString css = QString::fromUtf8(cssFile.readAll());
+        cssFile.close();
+        return css;
+    } else {
+        // Пробуем альтернативные пути
+        QString altPath = resourcePath;
+        altPath.replace(":/", "../resources/");
+
+        QFile altFile(altPath);
+        if (altFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString css = QString::fromUtf8(altFile.readAll());
+            altFile.close();
+            LOG_CAT_WARNING("UI", QString("Загружен CSS по альтернативному пути: %1").arg(altPath));
+            return css;
         }
 
-        .log-debug {
-            color: #006400; /* темно-зеленый */
-            background-color: #f0fff0;
-        }
+        LOG_CAT_ERROR("UI", QString("Не удалось загрузить CSS: %1").arg(resourcePath));
+        return "";
+    }
+}
 
-        .log-info {
-            color: #000000;
-            background-color: #ffffff;
-        }
-
-        .log-warning {
-            color: #ff8c00; /* темно-оранжевый */
-            background-color: #fff8dc;
-            font-weight: bold;
-        }
-
-        .log-error {
-            color: #8b0000; /* темно-красный */
-            background-color: #fff0f0;
-            font-weight: bold;
-        }
-
-        .log-time {
-            color: #808080; /* серый */
-            font-weight: normal;
-        }
-
-        .log-level {
-            color: #0000ff; /* синий */
-            font-weight: bold;
-        }
-
-        .log-category {
-            color: #800080; /* фиолетовый */
-            font-weight: bold;
-        }
-
-        .log-message {
-            color: #000000;
-            font-weight: normal;
-        }
-
-        /* Стили для категорий */
-        .log-category-controller {
-            border-left: 3px solid #0066cc;
-            margin-left: 2px;
-        }
-
-        .log-category-engine {
-            border-left: 3px solid #cc6600;
-            margin-left: 2px;
-        }
-
-        .log-category-ppbcom {
-            border-left: 3px solid #6600cc;
-            margin-left: 2px;
-        }
-
-        .log-category-command {
-            border-left: 3px solid #00cc66;
-            margin-left: 2px;
-        }
-
-        .log-category-ui {
-            border-left: 3px solid #cc0066;
-            margin-left: 2px;
-        }
-
-        .log-category-udp {
-            border-left: 3px solid #00cccc;
-            margin-left: 2px;
-        }
-
-        .log-category-general {
-            border-left: 3px solid #cccccc;
-            margin-left: 2px;
-        }
-
-        /* Табличный стиль для структурированных данных */
-        .log-table {
-            border-collapse: collapse;
-            margin: 5px 0;
-            width: 100%;
-        }
-
-        .log-table td, .log-table th {
-            border: 1px solid #ddd;
-            padding: 4px 8px;
-        }
-
-        .log-table th {
-            background-color: #f2f2f2;
-            text-align: left;
-        }
-    )";
-
-    ui->textBrowser->document()->setDefaultStyleSheet(css);
-
-    LOG_CAT_DEBUG("UI", "Настройка логирования завершена");
+QString TesterWindow::loadResourceTemplate(const QString& resourcePath)
+{
+    QFile templateFile(resourcePath);
+    if (templateFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QString templateContent  = QString::fromUtf8(templateFile.readAll());
+        templateFile.close();
+        return templateContent;
+    } else {
+        LOG_CAT_ERROR("UI", QString("Не удалось загрузить шаблон: %1").arg(resourcePath));
+        return "";
+    }
 }
 
 // Слот для получения логов
 void TesterWindow::onLogEntryReceived(const LogEntry& entry)
 {
-    // Сохраняем запись для возможного экспорта
-    m_logEntries.append(entry);
-
-    // Ограничиваем размер хранимых логов (например, последние 10000 записей)
-    const int MAX_LOG_ENTRIES = 10000;
-    if (m_logEntries.size() > MAX_LOG_ENTRIES) {
-        m_logEntries.remove(0, m_logEntries.size() - MAX_LOG_ENTRIES);
+    // Быстрая проверка на инициализацию
+    if (!ui || !ui->textBrowser) {
+        return;
     }
 
-    // Форматируем и отображаем
-    QString html = formatLogEntryToHtml(entry);
+    // Сохраняем запись для экспорта
+    m_logEntries.append(entry);
 
-    // Используем QMetaObject для гарантии работы в UI потоке
-    QMetaObject::invokeMethod(this, [this, html]() {
-        ui->textBrowser->append(html);
+    // Получаем HTML из LogEntry
+    QString html = entry.toHtml();
 
-        // Прокручиваем вниз
-        QTextCursor cursor = ui->textBrowser->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        ui->textBrowser->setTextCursor(cursor);
-        ui->textBrowser->ensureCursorVisible();
-    }, Qt::QueuedConnection);
+    // Добавляем в QTextBrowser
+    QTextCursor cursor(ui->textBrowser->document());
+    cursor.movePosition(QTextCursor::End);
+
+    // Если это первая запись, очищаем тестовый контент
+    if (m_logEntries.size() == 1) {
+        ui->textBrowser->clear();
+    }
+
+    cursor.insertHtml(html);
+
+    // Автопрокрутка
+    QTextCursor scrollCursor = ui->textBrowser->textCursor();
+    scrollCursor.movePosition(QTextCursor::End);
+    ui->textBrowser->setTextCursor(scrollCursor);
 }
 
 // Метод форматирования LogEntry в HTML
@@ -309,7 +319,7 @@ void TesterWindow::connectSignals()
     connect(m_controller, &PPBController::connectionStateChanged,
             this, &TesterWindow::onControllerConnectionStateChanged);
 
-    // 2. Получение статуса от ППБ (РАНЬШЕ НЕ БЫЛО ПОДКЛЮЧЕНО!)
+    // 2. Получение статуса от ППБ
     connect(m_controller, &PPBController::statusReceived,
             this, &TesterWindow::onControllerStatusReceived);
 
@@ -337,7 +347,7 @@ void TesterWindow::connectSignals()
     connect(m_controller, &PPBController::operationCompleted,
             this, &TesterWindow::onOperationCompleted);
 
-    // 9. ИЗМЕНЕНИЕ СОСТОЯНИЯ ЗАНЯТОСТИ (НОВОЕ!)
+    // 9. ИЗМЕНЕНИЕ СОСТОЯНИЯ ЗАНЯТОСТИ
     connect(m_controller, &PPBController::busyChanged,
             this, &TesterWindow::onControllerBusyChanged);
 
@@ -369,7 +379,7 @@ void TesterWindow::onConnectClicked()
     uint16_t address = getSelectedAddress();
     PPBState state = m_controller->connectionState();
 
-    // ВАЖНО: НЕ БЛОКИРУЕМ кнопку здесь!
+
     // Состояние кнопки обновится АВТОМАТИЧЕСКИ через onControllerConnectionStateChanged
 
     if (state == PPBState::Idle) {
@@ -822,9 +832,18 @@ void TesterWindow::onClearLogClicked()
 {
     ui->textBrowser->clear();
     m_logEntries.clear();
-    LOG_CAT_INFO("UI", "Лог очищен");
-}
 
+    // Добавляем сообщение об очистке
+    QString clearHtml = "<div class='log-entry log-level-info log-category-system'>"
+                        "<span class='log-time'>" + QDateTime::currentDateTime().toString("hh:mm:ss.zzz") + "</span> "
+                                                                                  "<span class='log-level'>[INFO]</span> "
+                                                                                  "<span class='log-category'>[SYSTEM]</span> "
+                                                                                  "<div class='log-message'>Логи очищены</div>"
+                                                                                  "</div>";
+
+    ui->textBrowser->setHtml(clearHtml);
+    LOG_CAT_INFO("UI", "Логи очищены");
+}
 void TesterWindow::onExportLogClicked()
 {
     QString fileName = QFileDialog::getSaveFileName(this, "Экспорт лога", "",
@@ -841,7 +860,7 @@ void TesterWindow::onExportLogClicked()
     QTextStream stream(&file);
 
     if (fileName.endsWith(".html", Qt::CaseInsensitive)) {
-        // Экспорт в HTML
+        // Экспорт в HTML с CSS стилями
         stream << "<!DOCTYPE html>\n";
         stream << "<html><head>\n";
         stream << "<meta charset=\"UTF-8\">\n";
@@ -852,7 +871,23 @@ void TesterWindow::onExportLogClicked()
         stream << "</head><body>\n";
 
         for (const LogEntry& entry : m_logEntries) {
-            stream << formatLogEntryToHtml(entry) << "\n";
+            if (entry.dataType != DataType::Text && entry.structuredData.isValid()) {
+                stream << entry.toHtml() << "\n";
+            } else {
+                stream << QString("<div class='log-entry log-level-%1 log-category-%2'>"
+                                  "<span class='log-time'>%3</span> "
+                                  "<span class='log-level'>[%4]</span> "
+                                  "<span class='log-category'>[%5]</span> "
+                                  "<div class='log-message'>%6</div>"
+                                  "</div>")
+                              .arg(entry.level.toLower(),
+                                   entry.category.toLower().replace("_", "-"),
+                                   entry.timestamp.toString("hh:mm:ss.zzz"),
+                                   entry.level,
+                                   entry.category,
+                                   entry.message.toHtmlEscaped().replace("\n", "<br/>"))
+                       << "\n";
+            }
         }
 
         stream << "</body></html>\n";
@@ -863,7 +898,7 @@ void TesterWindow::onExportLogClicked()
         stream << "Количество записей: " << m_logEntries.size() << "\n\n";
 
         for (const LogEntry& entry : m_logEntries) {
-            stream << formatLogEntryToPlainText(entry) << "\n";
+            stream << entry.toString() << "\n";
         }
     }
 

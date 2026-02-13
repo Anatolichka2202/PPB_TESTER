@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QMutex>
 #include <memory>
-
+#include "logentry.h"
 class UDPClient;
 class PPBCommunication;
 class PPBController;
@@ -41,6 +41,8 @@ private:
     void initializePPBCommunication();
     void initializeController();
     void initializeMainWindow();
+
+    void  testStructuredLogging();
 
     void cleanup();
 

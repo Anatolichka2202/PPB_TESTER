@@ -10,6 +10,9 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
+
+#include "../core/logging/logging_unified.h"
+#include <iostream>
 ApplicationManager* ApplicationManager::m_instance = nullptr;
 QMutex ApplicationManager::m_instanceMutex;
 
@@ -53,6 +56,8 @@ bool ApplicationManager::initialize()
     LOG_CAT_INFO("[APPLICATION]", "========== НАЧАЛО ИНИЦИАЛИЗАЦИИ ПРИЛОЖЕНИЯ ==========");
 
     try {
+
+
         // Создаем коммуникационный поток
         LOG_CAT_INFO("[APPLICATION]", "Создание коммуникационного потока...");
         m_communicationThread = new QThread();
@@ -77,8 +82,24 @@ bool ApplicationManager::initialize()
 
         m_initialized = true;
         LOG_CAT_INFO("[APPLICATION]", "========== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ УСПЕШНО ЗАВЕРШЕНА ==========");
-        emit initializationComplete();
+        // Тест работы адаптера
+        QTimer::singleShot(2000, this, []() {
+            LOG_CAT_INFO("ADAPTER_TEST", "Тест 1: Простой лог через адаптер");
 
+            // Тест структурированного лога
+            TableData testTable;
+            testTable.id = "test_table";
+            testTable.title = "Тестовая таблица";
+            testTable.headers = {"ID", "Компонент", "Статус"};
+            testTable.addRow({"1", "LogAdapter", "Работает"});
+            testTable.addRow({"2", "LogManager", "Тестируется"});
+            testTable.addRow({"3", "Application", "Запущено"});
+
+            LogEntry tableEntry = LogEntry::createTable("UI_STATUS", testTable);
+
+        });
+
+        emit initializationComplete();
         return true;
 
     } catch (const std::exception& e) {
@@ -97,6 +118,36 @@ bool ApplicationManager::initialize()
         emit initializationFailed("Неизвестная ошибка");
         return false;
     }
+}
+
+void ApplicationManager::testStructuredLogging()
+{
+    // Таблица статуса
+    TableData table;
+    table.id = "system_status";
+    table.title = "Статус системы";
+    table.headers = {"Компонент", "Статус", "Время"};
+    table.addRow({"UDP", "Работает", QTime::currentTime().toString("hh:mm:ss")});
+    table.addRow({"Контроллер", "Готов", QTime::currentTime().toString("hh:mm:ss")});
+
+    // Отправляем через новый макрос
+    LogWrapper::log(LogEntry::createTable("UI_STATUS", table));
+
+    // Карточка подключения
+    CardData card;
+    card.id = "connection";
+    card.title = "Подключение к ППБ";
+    card.icon = "🔌";
+    card.backgroundColor = QColor("#2196F3");
+    card.textColor = QColor("#FFFFFF");
+    card.addField("IP", "198.168.0.230");
+    card.addField("Порт", "1080");
+    card.addField("Статус", "Установлено");
+
+    LogWrapper::log(LogEntry::createCard("UI_CONNECTION", card));
+
+    // Технический лог (не покажется в UI, но будет в файле)
+    LOG_TECH_NETWORK("UDP клиент инициализирован на порту 1080");
 }
 
 void ApplicationManager::initializeUDPClient()
@@ -429,16 +480,27 @@ void ApplicationManager::shutdown()
         QTimer::singleShot(50, &waitLoop, &QEventLoop::quit);
         waitLoop.exec();
 
+        // Отключаем все сигналы от communication, чтобы избежать вызовов после удаления
+        m_communication->disconnect();
+
         LOG_CAT_DEBUG("[APPLICATION]", "Ожидание завершения PPBCommunication");
 
-        m_communication.reset();
+        // Планируем удаление в потоке объекта и освобождаем владение
+        m_communication->deleteLater();
+        m_communication.release();
         LOG_CAT_INFO("[APPLICATION]", "PPBCommunication остановлен");
     }
 
     // 4. Останавливаем UDPClient (автоматически при уничтожении)
     if (m_udpClient) {
         LOG_CAT_INFO("[APPLICATION]", "Остановка UDPClient...");
-        m_udpClient.reset();
+
+        // Отключаем сигналы
+        m_udpClient->disconnect();
+        // Планируем удаление в его потоке
+        m_udpClient->deleteLater();
+        m_udpClient.release();
+
         LOG_CAT_INFO("[APPLICATION]", "UDPClient остановлен");
     }
 
@@ -498,13 +560,21 @@ void ApplicationManager::cleanup()
 
         if (m_communication) {
             LOG_CAT_INFO("[APPLICATION]", "Аварийная остановка PPBCommunication...");
-            m_communication.reset();
+
+            // Вызываем stop асинхронно (если есть возможность)
+            QMetaObject::invokeMethod(m_communication.get(), "stop", Qt::QueuedConnection);
+            m_communication->disconnect();
+            m_communication->deleteLater();
+            m_communication.release();
             LOG_CAT_INFO("[APPLICATION]", "PPBCommunication остановлен");
         }
 
         if (m_udpClient) {
             LOG_CAT_INFO("[APPLICATION]", "Аварийная остановка UDPClient...");
-            m_udpClient.reset();
+
+            m_udpClient->disconnect();
+            m_udpClient->deleteLater();
+            m_udpClient.release();
             LOG_CAT_INFO("[APPLICATION]", "UDPClient остановлен");
         }
 

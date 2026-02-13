@@ -1,0 +1,28 @@
+<div class="log-table-container" id="table-{{id}}">
+    <div class="table-title">
+        <span>{{title}}</span>
+        <div class="table-title-actions">
+            <button class="table-action-btn" onclick="exportTableToCsv('{{id}}')">📊 CSV</button>
+            <button class="table-action-btn" onclick="copyTableToClipboard('{{id}}')">📋 Копировать</button>
+            {{#sortable}}<button class="table-action-btn" onclick="toggleTableSort('{{id}}')">🔃 Сортировка</button>{{/sortable}}
+        </div>
+    </div>
+    <table class="log-table" {{#sortable}}data-sortable="true"{{/sortable}} {{#compact}}data-compact="true"{{/compact}}>
+        <thead>
+            <tr>
+                {{#headers}}
+                <th data-column="{{@index}}">{{.}}</th>
+                {{/headers}}
+            </tr>
+        </thead>
+        <tbody>
+            {{#rows}}
+            <tr>
+                {{#.}}
+                <td class="col-{{@index}} {{#formats.{{@index}}}}format-{{formats.{{@index}}}}{{/formats.{{@index}}}}">{{.}}</td>
+                {{/.}}
+            </tr>
+            {{/rows}}
+        </tbody>
+    </table>
+</div>

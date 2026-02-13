@@ -34,6 +34,13 @@ private slots:
     void onControllerErrorOccurred(const QString& error);
     void onControllerOperationCompleted(bool success, const QString& message);
 
+    void onAnalysisStarted();
+    void onAnalysisProgress(int percent);
+    void onAnalysisComplete(const QString& summary, const QVariantMap& details);
+
+
+    void on_AnalizeBttn_clicked();
+
 private:
     Ui::pult *ui;
     PPBController* m_controller;

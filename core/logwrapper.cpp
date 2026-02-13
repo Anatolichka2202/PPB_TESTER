@@ -1,13 +1,23 @@
 // logwrapper.cpp
 #include "logwrapper.h"
-#include <QMutex>
+#include "logging/logdistributor.h"
 #include <QCoreApplication>
 #include <QThread>
-#include "logger.h"
 #include <iostream>
-// Инициализация статических членов
+#include "logging/logconfig.h"
 LogWrapper* LogWrapper::m_instance = nullptr;
-QMutex LogWrapper::m_instanceMutex;
+
+// Убираем мьютекс из instance(), используем атомарную инициализацию
+LogWrapper* LogWrapper::instance()
+{
+    // Простая проверка без мьютекса для первого вызова
+    if (!m_instance) {
+        // Создаем в главном потоке
+        m_instance = new LogWrapper();
+        m_instance->moveToThread(qApp->thread());
+    }
+    return m_instance;
+}
 
 LogWrapper::LogWrapper(QObject *parent) : QObject(parent)
 {
@@ -18,21 +28,17 @@ LogWrapper::LogWrapper(QObject *parent) : QObject(parent)
         std::cerr << "LogWrapper: moving to main thread" << std::endl;
         moveToThread(qApp->thread());
     }
-     std::cerr << "LogWrapper: initializing Logger with callback" << std::endl;
 
-    // Инициализируем Logger с callback для записи логов
-     try {
-         Logger::init([this](const LogEntry& entry) {
-             std::cerr << "Logger callback invoked, emitting signal" << std::endl;
-             emit logEntryReceived(entry);
-             std::cerr << "Logger callback completed" << std::endl;
-         });
-     } catch (const std::exception& e) {
-         std::cerr << "LogWrapper: exception in Logger::init: " << e.what() << std::endl;
-         throw;
-     }
+    //  ИНИЦИАЛИЗИРУЕМ LOGCONFIG
+    LogConfig::instance().initDefaultConfig();
 
-    // Используем макрос с категорией (два аргумента)
+    // Инициализируем распределитель
+    LogDistributor::instance().init();
+
+    // Подключаем сигнал от распределителя к нашему сигналу
+    connect(&LogDistributor::instance(), &LogDistributor::logForUI,
+            this, &LogWrapper::logEntryReceived, Qt::QueuedConnection);
+
     std::cerr << "LogWrapper инициализирован" << std::endl;
 }
 
@@ -42,46 +48,30 @@ LogWrapper::~LogWrapper()
     m_instance = nullptr;
 }
 
-LogWrapper* LogWrapper::instance()
-{
-    // Двойная проверка блокировки для потокобезопасности
-    if (!m_instance) {
-        QMutexLocker locker(&m_instanceMutex);
-        if (!m_instance) {
-             std::cerr << "Создание экземпляра LogWrapper..." << std::endl;
-            m_instance = new LogWrapper();
-            // Перемещаем в основной поток (на всякий случай)
-            m_instance->moveToThread(qApp->thread());
-           std::cerr << "Экземпляр LogWrapper создан" << std::endl;
-        }
-    }
-    return m_instance;
-}
-
 // Прямой метод для отправки LogEntry
 void LogWrapper::log(const LogEntry& entry)
 {
-    // Получаем экземпляр
-    LogWrapper* wrapper = instance();
-
-    // Проверяем, в каком потоке мы находимся
-    if (QThread::currentThread() == wrapper->thread()) {
-        // В основном потоке - отправляем сразу
-        wrapper->sendLog(entry);
-    } else {
-        // В другом потоке - отправляем через очередь
-        QMetaObject::invokeMethod(wrapper, "sendLog",
-                                  Qt::QueuedConnection,
-                                  Q_ARG(LogEntry, entry));
+    static bool inLog = false;
+    if (inLog) {
+        std::cerr << "LogWrapper::log: рекурсивный вызов, пропускаем" << std::endl;
+        return;
     }
+
+    inLog = true;
+
+    // Логируем сам факт логирования (для отладки маппинга)
+    if (entry.category == "LEGACY" || entry.category.contains("[") || entry.category.contains("]")) {
+        // Это старый формат - логируем маппинг
+        qDebug() << "[LOGGER] Legacy log detected: " << entry.category << " -> "
+                 << entry.message.left(50) << "...";
+    }
+
+    LogDistributor::instance().distribute(entry);
+    inLog = false;
 }
 
-// Внутренний метод для отправки лога
-void LogWrapper::sendLog(const LogEntry& entry)
-{
-    // Отправляем в Logger (который запишет в файл и консоль)
-    Logger::write(entry);
-}
+// Удаляем все остальные методы sendLog и т.д.
+// Оставляем только простые вызовы...
 
 // Статические методы без категории
 void LogWrapper::debug(const QString& message)
@@ -123,4 +113,37 @@ void LogWrapper::warning(const QString& category, const QString& message)
 void LogWrapper::error(const QString& category, const QString& message)
 {
     log(LogEntry("ERROR", category, message));
+}
+
+void LogWrapper::structuredLog(const QString& level, const QString& category, const QString& message)
+{
+    log(LogEntry(level, category, message));
+}
+
+void LogWrapper::techLog(const QString& level, const QString& category, const QString& message)
+{
+    log(LogEntry(level, category, message));
+}
+
+void LogWrapper::logTable(const TableData& table)
+{
+    LogEntry entry = LogEntry::createTable("UI_DATA", table);
+    log(entry);
+}
+
+void LogWrapper::logCard(const CardData& card)
+{
+    LogEntry entry = LogEntry::createCard("UI_STATUS", card);
+    log(entry);
+}
+
+void LogWrapper::logProgress(const ProgressData& progress)
+{
+    LogEntry entry = LogEntry::createProgress("UI_STATUS", progress);
+    log(entry);
+}
+
+void LogWrapper::emitLogEntry(const LogEntry& entry)
+{
+    emit logEntryReceived(entry);
 }
