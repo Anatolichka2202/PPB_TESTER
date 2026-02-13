@@ -78,6 +78,7 @@ bool PacketBuilder::parsePPBResponse(const QByteArray& data, PPBResponse& respon
         return false;
     }
 
+    response.address= (((uint16_t)data[0]<<8) | data[1]);
     qDebug() << "Ответ от адреса: 0x" << QString::number(response.address, 16).right(4).toUpper()
              << " (битовая маска)";
     if (response.address & 0x0001) qDebug() << "  - ППБ1";

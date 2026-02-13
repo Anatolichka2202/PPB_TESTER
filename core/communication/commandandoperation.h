@@ -20,9 +20,9 @@ constexpr int STATUS_RESPONSE =9;             // 9 пакетов статуса
 constexpr int VERS_RESPONSE =2;               //2 пакеты версии
 constexpr int CHECKSUM_RESPONSE=2;            //2 пакета контр суммы
 
-constexpr int TS_TIMEOUT_MS = 5000;          // Таймаут подключения
+constexpr int TS_TIMEOUT_MS = 1000;          // Таймаут подключения
 constexpr int DATA_TIMEOUT_MS = 10000;       // Таймаут получения данных
-constexpr int PRBS_TIMEOUT_MS = 15000;       // Таймаут для тестовых последовательностей
+constexpr int PRBS_TIMEOUT_MS = 100;       // Таймаут для тестовых последовательностей
 }
 
 // Базовый класс для всех команд
@@ -163,7 +163,7 @@ public:
 };
 
 // PRBS_M2S команда с переопределенным onOkReceived
-class PRBS_M2SCommand : public ConcretePPBCommand<TechCommand::PRBS_M2S, 0> {
+class PRBS_M2SCommand : public ConcretePPBCommand<TechCommand::PRBS_M2S, PPBConstants::PRBS_TIMEOUT_MS> {
 public:
     void onOkReceived(CommandInterface* comm, uint16_t address) const override;
 };

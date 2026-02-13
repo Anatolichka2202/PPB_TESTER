@@ -96,7 +96,10 @@ bool UDPClient::bind(quint16 port)
     LOG_CAT_INFO("UDP","::bind - попытка привязки к порту " + QString::number(port));
 
     // Пробуем привязаться
-    if (m_socket->bind(QHostAddress::AnyIPv4, port)) {
+
+
+    if (m_socket->bind(QHostAddress("192.168.0.246"), port)) {//ping  -t QHostAddress::AnyIPv4
+
         m_isBound = true;
         m_boundPort = m_socket->localPort();
         m_boundAddress = m_socket->localAddress();
