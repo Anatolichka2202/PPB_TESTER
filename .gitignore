@@ -39,7 +39,6 @@ qrc_*.cpp
 # Логи приложения
 logs/
 *.log
-*.txt
 
 # ========== Qt Creator ==========
 *.autosave
@@ -63,3 +62,7 @@ Thumbs.db
 
 # ========== Старые версии ==========
 OLD/
+# Keep build descriptions, documentation and supplied USB SDK visible
+!CMakeLists.txt
+!core/AKIP/ch375_sdk/CH375DLL64.dll
+!core/AKIP/ch375_sdk/CH375DLL64.lib
